@@ -1,4 +1,9 @@
-use std::{fs::File, io::Read, marker::PhantomData, path::Path};
+use std::{
+    fs::File,
+    io::{Read, Write},
+    marker::PhantomData,
+    path::Path,
+};
 
 use crate::{layout::Layout, Sector, Track};
 
@@ -92,6 +97,18 @@ where
         Ok(())
     }
 
+    pub fn write_to_path(&mut self, filename: &Path) -> std::io::Result<()> {
+        let mut file = File::create(filename)?;
+        self.write_to_writer(&mut file)?;
+        Ok(())
+    }
+    pub fn write_to_writer<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        for track in &self.tracks {
+            track.write_to_writer(writer)?;
+        }
+        Ok(())
+    }
+
     /// Get a specific sector of this disk.
     ///
     /// # Example
@@ -109,5 +126,33 @@ where
     fn get_track(&self, track_no: u8) -> &Track {
         let index = (track_no - 1) as usize;
         &self.tracks[index]
+    }
+    pub fn get_sector_mut(&mut self, track_no: u8, sector_no: u8) -> &mut Sector {
+        self.get_track_mut(track_no).get_sector_mut(sector_no)
+    }
+
+    fn get_track_mut(&mut self, track_no: u8) -> &mut Track {
+        let index = (track_no - 1) as usize;
+        &mut self.tracks[index]
+    }
+
+    /// Get the name of the disk
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use d64::*;
+    /// use std::path::*;
+    /// let mut disk = Disk::<Commodore1541>::new();
+    /// disk.initialize_layout();
+    /// let path = Path::new("./disks/1541-empty.d64");
+    /// disk.read_from_path(&path).unwrap();
+    /// assert_eq!(disk.get_name(), "EMPTY");
+    /// ```
+    pub fn get_name(&self) -> String {
+        L::default().get_disk_name(self)
+    }
+    pub fn set_name(&mut self, new_name: &String) {
+        L::default().set_disk_name(self, new_name)
     }
 }

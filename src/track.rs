@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::io::{Read, Write};
 
 use crate::Sector;
 
@@ -23,9 +23,19 @@ impl Track {
         }
         Ok(())
     }
+    pub fn write_to_writer<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        for sector in &self.sectors {
+            sector.write_to_writer(writer)?;
+        }
+        Ok(())
+    }
 
     pub fn get_sector(&self, sector_no: u8) -> &Sector {
-        let index = (sector_no -1) as usize;
+        let index = (sector_no - 1) as usize;
         &self.sectors[index]
+    }
+    pub fn get_sector_mut(&mut self, sector_no: u8) -> &mut Sector {
+        let index = (sector_no - 1) as usize;
+        &mut self.sectors[index]
     }
 }

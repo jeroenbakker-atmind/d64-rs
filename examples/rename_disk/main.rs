@@ -6,8 +6,9 @@ fn main() -> std::io::Result<()> {
     let mut disk = Disk::<Commodore1541>::new();
     disk.initialize_layout();
     disk.read_from_path(Path::new("./disks/1541-empty.d64"))?;
-    println!("-- {} --", disk.get_name());
-    let sector = disk.get_sector(18, 1);
-    sector.print();
+    println!("-- old name: {} --", disk.get_name());
+    disk.set_name(&String::from("TEST"));
+    println!("-- new name: {} --", disk.get_name());
+    disk.write_to_path(Path::new("./1541-rename-test.d64"))?;
     Ok(())
 }
