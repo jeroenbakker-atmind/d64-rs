@@ -1,4 +1,4 @@
-use std::{io::Read, marker::PhantomData};
+use std::{fs::File, marker::PhantomData, path::Path};
 
 use crate::{layout::Layout, Track};
 
@@ -36,5 +36,17 @@ where
         }
     }
 
-    // pub fn read_from_d64(&mut self, Read)
+    pub fn read_from_path(&mut self, filename: &Path) -> std::io::Result<()> {
+        let mut file = File::open(filename)?;
+        self.read_from_file(&mut file)?;
+        Ok(())
+    }
+
+    // TODO: Should use reader.
+    pub fn read_from_file(&mut self, file: &mut File) -> std::io::Result<()> {
+        for track in &mut self.tracks {
+            track.read_from_file(file)?;
+        }
+        Ok(())
+    }
 }

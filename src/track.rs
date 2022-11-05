@@ -1,3 +1,5 @@
+use std::fs::File;
+
 use crate::Sector;
 
 #[derive(Default)]
@@ -13,5 +15,12 @@ impl Track {
             sector.initialize(bytes_per_sector as usize);
             self.sectors.push(sector);
         }
+    }
+
+    pub fn read_from_file(&mut self, file: &mut File) -> std::io::Result<()> {
+        for sector in &mut self.sectors {
+            sector.read_from_file(file)?;
+        }
+        Ok(())
     }
 }
