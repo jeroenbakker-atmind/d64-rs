@@ -7,10 +7,10 @@ other layouts as well.
 
 Still in early development.
 
-[x] Reading d64 file.
-[x] Writing d64 file.
-[x] Rename disk name.
-[ ] Format disk.
-[ ] List entries.
-[ ] Read file.
-[ ] Write file.
+* [x] Reading d64 file.
+* [x] Writing d64 file.
+* [x] Rename disk name.
+* [ ] Format disk.
+* [ ] List entries.
+* [ ] Read file.
+* [ ] Write file.
