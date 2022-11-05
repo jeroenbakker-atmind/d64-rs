@@ -16,4 +16,16 @@ impl Sector {
         reader.read(self.data.as_mut_slice())?;
         Ok(())
     }
+
+    pub fn print(&self) {
+        let mut x = 0;
+        for a in &self.data {
+            print!("{:02x} ", a);
+            x += 1;
+            if x == 16 {
+                x = 0;
+                println!();
+            }
+        }
+    }
 }

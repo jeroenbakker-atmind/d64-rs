@@ -1,6 +1,6 @@
 use std::{fs::File, io::Read, marker::PhantomData, path::Path};
 
-use crate::{layout::Layout, Track};
+use crate::{layout::Layout, Sector, Track};
 
 pub struct Disk<L>
 where
@@ -90,5 +90,24 @@ where
             track.read_from_reader(reader)?;
         }
         Ok(())
+    }
+
+    /// Get a specific sector of this disk.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use d64::*;
+    /// let mut disk = Disk::<Commodore1541>::new();
+    /// disk.initialize_layout();
+    /// let _sector = disk.get_sector(18, 1);
+    /// ```
+    pub fn get_sector(&self, track_no: u8, sector_no: u8) -> &Sector {
+        self.get_track(track_no).get_sector(sector_no)
+    }
+
+    fn get_track(&self, track_no: u8) -> &Track {
+        let index = (track_no - 1) as usize;
+        &self.tracks[index]
     }
 }

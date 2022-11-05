@@ -23,4 +23,9 @@ impl Track {
         }
         Ok(())
     }
+
+    pub fn get_sector(&self, sector_no: u8) -> &Sector {
+        let index = (sector_no -1) as usize;
+        &self.sectors[index]
+    }
 }
