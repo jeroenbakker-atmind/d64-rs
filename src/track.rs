@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::io::Read;
 
 use crate::Sector;
 
@@ -17,9 +17,9 @@ impl Track {
         }
     }
 
-    pub fn read_from_file(&mut self, file: &mut File) -> std::io::Result<()> {
+    pub fn read_from_reader<R: Read>(&mut self, reader: &mut R) -> std::io::Result<()> {
         for sector in &mut self.sectors {
-            sector.read_from_file(file)?;
+            sector.read_from_reader(reader)?;
         }
         Ok(())
     }

@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read};
+use std::io::Read;
 
 #[derive(Default)]
 pub struct Sector {
@@ -11,9 +11,9 @@ impl Sector {
         self.data.resize(data_len, 0);
     }
 
-    pub fn read_from_file(&mut self, file: &mut File) -> std::io::Result<()> {
+    pub fn read_from_reader<R: Read>(&mut self, reader: &mut R) -> std::io::Result<()> {
         // TODO raise error when not all bytes could be read.
-        file.read(self.data.as_mut_slice())?;
+        reader.read(self.data.as_mut_slice())?;
         Ok(())
     }
 }
