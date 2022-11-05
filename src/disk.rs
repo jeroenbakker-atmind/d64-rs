@@ -1,17 +1,23 @@
-use std::{marker::PhantomData, io::Read};
+use std::{io::Read, marker::PhantomData};
 
 use crate::{layout::Layout, Track};
 
-pub struct Disk<L> where L: Layout {
+pub struct Disk<L>
+where
+    L: Layout,
+{
     layout: PhantomData<L>,
     tracks: Vec<Track>,
 }
 
-impl <L>Disk<L> where L:Layout+Sized+Default {
+impl<L> Disk<L>
+where
+    L: Layout + Sized + Default,
+{
     pub fn new() -> Self {
         let mut disk = Disk::<L> {
             layout: PhantomData::<L>::default(),
-            tracks: Vec::default()
+            tracks: Vec::default(),
         };
         disk.initialize_layout();
         disk

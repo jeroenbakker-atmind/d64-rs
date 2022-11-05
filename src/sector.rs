@@ -1,6 +1,6 @@
 #[derive(Default)]
 pub struct Sector {
-    data: Vec<u8>
+    data: Vec<u8>,
 }
 
 impl Sector {

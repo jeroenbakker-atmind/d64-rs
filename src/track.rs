@@ -1,8 +1,8 @@
 use crate::Sector;
 
 #[derive(Default)]
-pub struct Track{
-    sectors: Vec<Sector>
+pub struct Track {
+    sectors: Vec<Sector>,
 }
 
 impl Track {
@@ -15,4 +15,3 @@ impl Track {
         }
     }
 }
-
