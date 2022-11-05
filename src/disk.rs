@@ -155,4 +155,18 @@ where
     pub fn set_name(&mut self, new_name: &String) {
         L::default().set_disk_name(self, new_name)
     }
+
+    /// Format the disk
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use d64::*;
+    /// let mut disk = Disk::<Commodore1541>::new();
+    /// disk.initialize_layout();
+    /// disk.format();
+    /// ```
+    pub fn format(&mut self) {
+        L::default().format_disk(self);
+    }
 }

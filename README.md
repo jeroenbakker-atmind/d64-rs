@@ -10,7 +10,8 @@ Still in early development.
 * [x] Reading d64 file.
 * [x] Writing d64 file.
 * [x] Rename disk name.
-* [ ] Format disk.
+* [x] Format disk.
 * [ ] List entries.
 * [ ] Read file.
 * [ ] Write file.
+* [ ] Disk IDs. (01-2A signature)

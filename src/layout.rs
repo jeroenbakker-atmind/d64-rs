@@ -10,4 +10,12 @@ pub trait Layout {
     fn set_disk_name(&self, disk: &mut Disk<Self>, new_name: &String)
     where
         Self: Sized;
+    fn format_disk(&self, disk: &mut Disk<Self>)
+    where
+        Self: Sized;
+
+    /// Set all content of the disk to 0. (each track, sector, byte)
+    fn clear_disk(&self, disk: &mut Disk<Self>)
+    where
+        Self: Sized;
 }

@@ -11,5 +11,8 @@ name="dump_disk"
 [[example]]
 name="rename_disk"
 
+[[example]]
+name="format_disk"
+
 
 [dependencies]
