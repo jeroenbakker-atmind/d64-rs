@@ -14,4 +14,4 @@ Still in early development.
 * [ ] List entries.
 * [ ] Read file.
 * [ ] Write file.
-* [ ] Disk IDs. (01-2A signature)
+* [x] Disk IDs. (01-2A signature)

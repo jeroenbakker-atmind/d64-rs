@@ -87,6 +87,17 @@ impl Layout for Commodore1541 {
             }
         }
         self.mark_sector_used(sector, 18, 0);
+
+        // Initialize default ID (01-2A)
+        // Disk ID is 11 chars.
+        for offset in 160..171 {
+            sector.set_byte(offset, PETSCII_NBSP);
+        }
+        sector.set_byte(162, encode_petscii('0', PETSCII_NBSP));
+        sector.set_byte(163, encode_petscii('1', PETSCII_NBSP));
+        sector.set_byte(165, encode_petscii('2', PETSCII_NBSP));
+        sector.set_byte(166, encode_petscii('A', PETSCII_NBSP));
+
         self.set_disk_name(disk, &String::from("NONAME"));
     }
 
