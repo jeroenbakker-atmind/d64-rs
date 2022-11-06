@@ -103,14 +103,15 @@ impl Layout for Commodore1541 {
     where
         Self: Sized,
     {
+        const BYTES_PER_ENTRY: usize = 32;
         let mut result = Vec::new();
         let mut sector = disk.get_sector(18, 0);
         while let Some(s) = self.get_next_sector(disk, sector) {
             sector = s;
 
-            let mut entry_bytes = [0_u8; 16];
+            let mut entry_bytes = [0_u8; BYTES_PER_ENTRY];
             for sector_entry in 0..8 {
-                sector.get_bytes(sector_entry * 32, &mut entry_bytes);
+                sector.get_bytes(sector_entry * BYTES_PER_ENTRY, &mut entry_bytes);
                 let entry = FileEntry::from_bytes(&entry_bytes);
                 if entry.file_type != FileType::Scratched {
                     result.push(entry);

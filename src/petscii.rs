@@ -95,3 +95,29 @@ pub fn encode_petscii(ascii: char, default: u8) -> u8 {
     }
     return default;
 }
+
+#[derive(Debug)]
+pub struct PetsciiString {
+    bytes: Vec<u8>,
+}
+
+impl PetsciiString {
+    pub fn fixed_size(bytes: &[u8]) -> PetsciiString {
+        let b = Vec::from(bytes);
+        PetsciiString { bytes: b }
+    }
+}
+
+impl From<&PetsciiString> for String {
+    fn from(src: &PetsciiString) -> String {
+        let mut result = String::new();
+        for byte in &src.bytes {
+            if *byte == PETSCII_NBSP {
+                break;
+            }
+            let ch = decode_petscii(*byte);
+            result.push(ch);
+        }
+        result
+    }
+}
