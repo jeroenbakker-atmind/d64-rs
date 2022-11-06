@@ -1,4 +1,7 @@
-use crate::{decode_petscii, encode_petscii, Disk, Layout, Sector, PETSCII_NBSP};
+use crate::{
+    decode_petscii, encode_petscii, Disk, Layout, Sector, PETSCII_A, PETSCII_NBSP, PETSCII_ONE,
+    PETSCII_TWO, PETSCII_ZERO,
+};
 
 #[derive(Default)]
 pub struct Commodore1541 {}
@@ -69,8 +72,19 @@ impl Layout for Commodore1541 {
         Self: Sized,
     {
         self.clear_disk(disk);
-
+        self.set_disk_name(disk, &String::from("NONAME"));
         let sector = disk.get_sector_mut(18, 0);
+
+        // Initialize default ID (01-2A)
+        // Disk ID is 11 chars.
+        for offset in 160..171 {
+            sector.set_byte(offset, PETSCII_NBSP);
+        }
+        sector.set_byte(162, PETSCII_ZERO);
+        sector.set_byte(163, PETSCII_ONE);
+        sector.set_byte(165, PETSCII_TWO);
+        sector.set_byte(166, PETSCII_A);
+
         // Next sector (disk listing)
         sector.set_byte(0, 18);
         sector.set_byte(1, 1);
@@ -88,17 +102,7 @@ impl Layout for Commodore1541 {
         }
         self.mark_sector_used(sector, 18, 0);
 
-        // Initialize default ID (01-2A)
-        // Disk ID is 11 chars.
-        for offset in 160..171 {
-            sector.set_byte(offset, PETSCII_NBSP);
-        }
-        sector.set_byte(162, encode_petscii('0', PETSCII_NBSP));
-        sector.set_byte(163, encode_petscii('1', PETSCII_NBSP));
-        sector.set_byte(165, encode_petscii('2', PETSCII_NBSP));
-        sector.set_byte(166, encode_petscii('A', PETSCII_NBSP));
-
-        self.set_disk_name(disk, &String::from("NONAME"));
+        // TODO: init director_listing (18,1)
     }
 
     fn clear_disk(&self, disk: &mut Disk<Self>)
