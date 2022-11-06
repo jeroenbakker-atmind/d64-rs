@@ -8,7 +8,7 @@ use std::{
     path::Path,
 };
 
-use crate::{layout::Layout, Sector, Track};
+use crate::{layout::Layout, Sector, SectorRef, Track, TrackNo};
 
 /// Disk provides a API way how tracks and sectors are logically layed out.
 pub struct Disk<L>
@@ -113,13 +113,13 @@ where
     /// ```
     /// use d64::*;
     /// let disk = Disk::<Commodore1541>::new();
-    /// let _sector = disk.get_sector(18, 0);
+    /// let _sector = disk.get_sector((18, 0));
     /// ```
-    pub fn get_sector(&self, track_no: u8, sector_no: u8) -> &Sector {
-        self.get_track(track_no).get_sector(sector_no)
+    pub fn get_sector(&self, sector_ref: SectorRef) -> &Sector {
+        self.get_track(sector_ref.0).get_sector(sector_ref.1)
     }
 
-    fn get_track(&self, track_no: u8) -> &Track {
+    fn get_track(&self, track_no: TrackNo) -> &Track {
         let index = (track_no - 1) as usize;
         &self.tracks[index]
     }
@@ -130,13 +130,14 @@ where
     /// ```
     /// use d64::*;
     /// let mut disk = Disk::<Commodore1541>::new();
-    /// let mut _sector = disk.get_sector_mut(18, 0);
+    /// let mut _sector = disk.get_sector_mut((18, 0));
     /// ```
-    pub fn get_sector_mut(&mut self, track_no: u8, sector_no: u8) -> &mut Sector {
-        self.get_track_mut(track_no).get_sector_mut(sector_no)
+    pub fn get_sector_mut(&mut self, sector_ref: SectorRef) -> &mut Sector {
+        self.get_track_mut(sector_ref.0)
+            .get_sector_mut(sector_ref.1)
     }
 
-    fn get_track_mut(&mut self, track_no: u8) -> &mut Track {
+    fn get_track_mut(&mut self, track_no: TrackNo) -> &mut Track {
         let index = (track_no - 1) as usize;
         &mut self.tracks[index]
     }

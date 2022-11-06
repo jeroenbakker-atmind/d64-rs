@@ -1,7 +1,14 @@
 use crate::{
-    decode_petscii, encode_petscii, Disk, FileEntry, FileType, Layout, Sector, PETSCII_A,
-    PETSCII_NBSP, PETSCII_ONE, PETSCII_TWO, PETSCII_ZERO,
+    decode_petscii, encode_petscii, Disk, FileEntry, FileType, Layout, Sector, SectorRef, TrackNo,
+    PETSCII_A, PETSCII_NBSP, PETSCII_ONE, PETSCII_TWO, PETSCII_ZERO,
 };
+
+/// Reference to the sector containing the BAM, disk name and disk id.
+const SECTOR_DISK_HEADER: SectorRef = (18, 0);
+/// Default sector where to start the file list stored on the disk.
+const SECTOR_DISK_LISTING: SectorRef = (18, 1);
+/// Indicates that marks the end of a chain of sectors.
+const SECTOR_END_OF_CHAIN: SectorRef = (0, 255);
 
 /// Commodore 1541 disk-drive.
 ///
@@ -22,7 +29,7 @@ impl Layout for Commodore1541 {
         return 35;
     }
 
-    fn num_sectors(&self, track: u8) -> u8 {
+    fn num_sectors(&self, track: TrackNo) -> u8 {
         if (1..=17).contains(&track) {
             return 21;
         }
@@ -46,7 +53,7 @@ impl Layout for Commodore1541 {
     where
         Self: Sized,
     {
-        let sector = disk.get_sector(18, 0);
+        let sector = disk.get_sector(SECTOR_DISK_HEADER);
         let name_start = 9 * 16;
         let name_end = name_start + 16;
         let mut name = String::new();
@@ -64,7 +71,7 @@ impl Layout for Commodore1541 {
     where
         Self: Sized,
     {
-        let sector = disk.get_sector_mut(18, 0);
+        let sector = disk.get_sector_mut(SECTOR_DISK_HEADER);
         // TODO: max 16 chars.
         let mut name = new_name.clone();
         let name_start = 9 * 16;
@@ -96,7 +103,7 @@ impl Layout for Commodore1541 {
     {
         for track_no in 1..=self.num_tracks() {
             for sector_no in 0..self.num_sectors(track_no) {
-                let sector = disk.get_sector_mut(track_no, sector_no);
+                let sector = disk.get_sector_mut((track_no, sector_no));
                 sector.fill(0, self.bytes_per_sector() as usize, 0);
             }
         }
@@ -108,7 +115,7 @@ impl Layout for Commodore1541 {
     {
         const BYTES_PER_ENTRY: usize = 32;
         let mut result = Vec::new();
-        let mut sector = disk.get_sector(18, 0);
+        let mut sector = disk.get_sector(SECTOR_DISK_HEADER);
         while let Some(s) = self.get_next_sector(disk, sector) {
             sector = s;
 
@@ -126,11 +133,11 @@ impl Layout for Commodore1541 {
 }
 
 impl Commodore1541 {
-    fn mark_sector_unused(&self, disk: &mut Disk<Self>, track_no: u8, sector_no: u8) {
-        let sector = disk.get_sector_mut(18, 0);
-        let track_offset = track_no as usize * 4;
-        let sector_offset = (track_offset + sector_no as usize / 8) + 1;
-        let shift = sector_no % 8;
+    fn mark_sector_unused(&self, disk: &mut Disk<Self>, sector_ref: SectorRef) {
+        let sector = disk.get_sector_mut(SECTOR_DISK_HEADER);
+        let track_offset = sector_ref.0 as usize * 4;
+        let sector_offset = (track_offset + sector_ref.1 as usize / 8) + 1;
+        let shift = sector_ref.1 % 8;
         let bit_mask = (1 as u8) << shift;
         let availability = *sector.get_byte(sector_offset);
         let new_availability = availability | bit_mask;
@@ -141,11 +148,11 @@ impl Commodore1541 {
         }
     }
 
-    fn mark_sector_used(&self, disk: &mut Disk<Self>, track_no: u8, sector_no: u8) {
-        let sector = disk.get_sector_mut(18, 0);
-        let track_offset = track_no as usize * 4;
-        let sector_offset = (track_offset + sector_no as usize / 8) + 1;
-        let shift = sector_no % 8;
+    fn mark_sector_used(&self, disk: &mut Disk<Self>, sector_ref: SectorRef) {
+        let sector = disk.get_sector_mut(SECTOR_DISK_HEADER);
+        let track_offset = sector_ref.0 as usize * 4;
+        let sector_offset = (track_offset + sector_ref.1 as usize / 8) + 1;
+        let shift = sector_ref.1 % 8;
         let bit_mask = (1 as u8) << shift;
         let availability = *sector.get_byte(sector_offset);
         let new_availability = availability & (255 - bit_mask);
@@ -158,7 +165,7 @@ impl Commodore1541 {
 
     // Initialize the disk ID default=01-2A
     fn initialize_disk_id(&self, disk: &mut Disk<Self>) {
-        let sector = disk.get_sector_mut(18, 0);
+        let sector = disk.get_sector_mut(SECTOR_DISK_HEADER);
         for offset in 160..171 {
             sector.set_byte(offset, PETSCII_NBSP);
         }
@@ -169,7 +176,7 @@ impl Commodore1541 {
     }
 
     fn initialize_dos_version(&self, disk: &mut Disk<Self>) {
-        let sector = disk.get_sector_mut(18, 0);
+        let sector = disk.get_sector_mut(SECTOR_DISK_HEADER);
         sector.set_byte(2, 65);
     }
 
@@ -177,38 +184,40 @@ impl Commodore1541 {
         for track_no in 1..=self.num_tracks() {
             let num_sectors = self.num_sectors(track_no);
             for sector_no in 0..num_sectors {
-                self.mark_sector_unused(disk, track_no, sector_no);
+                self.mark_sector_unused(disk, (track_no, sector_no));
             }
         }
-        self.mark_sector_used(disk, 18, 0);
+        self.mark_sector_used(disk, SECTOR_DISK_HEADER);
     }
 
     fn initialize_directory_listing(&self, disk: &mut Disk<Self>) {
-        let sector180 = disk.get_sector_mut(18, 0);
-        self.set_next_sector(sector180, 18, 1);
+        let sector180 = disk.get_sector_mut(SECTOR_DISK_HEADER);
+        self.set_next_sector(sector180, SECTOR_DISK_LISTING);
 
-        let sector181 = disk.get_sector_mut(18, 1);
+        let sector181 = disk.get_sector_mut(SECTOR_DISK_LISTING);
         self.end_sector_chain(sector181);
+        self.mark_sector_used(disk, SECTOR_DISK_LISTING);
     }
 
     /// Set the next sector for the given sector in a chain of sectors.
-    fn set_next_sector(&self, sector: &mut Sector, track_no: u8, sector_no: u8) {
-        sector.set_byte(0, track_no);
-        sector.set_byte(1, sector_no);
+    fn set_next_sector(&self, sector: &mut Sector, sector_ref: SectorRef) {
+        sector.set_byte(0, sector_ref.0);
+        sector.set_byte(1, sector_ref.1);
     }
 
     fn get_next_sector<'a>(&self, disk: &'a Disk<Self>, sector: &Sector) -> Option<&'a Sector> {
         let track_no = *sector.get_byte(0);
-        let sector_no = *sector.get_byte(1);
-        if track_no == 0 && sector_no == 255 {
+        if track_no == SECTOR_END_OF_CHAIN.0 {
             None
         } else {
-            Some(disk.get_sector(track_no, sector_no))
+            let sector_no = *sector.get_byte(1);
+            let sector_ref = (track_no, sector_no);
+            Some(disk.get_sector(sector_ref))
         }
     }
 
     /// Mark the given sector to be the last sector in a chain.
     fn end_sector_chain(&self, sector: &mut Sector) {
-        self.set_next_sector(sector, 0, 255);
+        self.set_next_sector(sector, SECTOR_END_OF_CHAIN);
     }
 }

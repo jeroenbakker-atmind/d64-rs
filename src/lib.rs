@@ -40,6 +40,7 @@ mod disk;
 mod layout;
 mod petscii;
 mod sector;
+mod sector_ref;
 mod track;
 
 pub use commodore1541::*;
@@ -47,4 +48,5 @@ pub use disk::*;
 pub use layout::*;
 pub use petscii::*;
 pub use sector::*;
+pub use sector_ref::*;
 pub use track::*;

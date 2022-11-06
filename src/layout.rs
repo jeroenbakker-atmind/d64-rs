@@ -1,4 +1,4 @@
-use crate::Disk;
+use crate::{Disk, TrackNo};
 
 /// Layout trait to map how a specific device uses its physical media (Disk).
 ///
@@ -11,7 +11,7 @@ pub trait Layout {
     /// Number of tracks that are created on the physical media.
     fn num_tracks(&self) -> u8;
     /// Number of sectors that are created on the physical media for a certain track.
-    fn num_sectors(&self, track: u8) -> u8;
+    fn num_sectors(&self, track: TrackNo) -> u8;
     /// Bytes that are stored in a single sector.
     fn bytes_per_sector(&self) -> u16;
     /// Extract the human readable name of the given disk.

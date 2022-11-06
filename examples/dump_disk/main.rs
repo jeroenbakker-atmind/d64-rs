@@ -8,7 +8,7 @@ fn main() -> std::io::Result<()> {
     println!("-- {} --", disk.get_name());
     for sector_no in 0..2 {
         println!(" -- 18-{:02} --", sector_no);
-        let sector = disk.get_sector(18, sector_no);
+        let sector = disk.get_sector((18, sector_no));
         sector.print();
     }
     Ok(())
