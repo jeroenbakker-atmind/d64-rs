@@ -1,3 +1,6 @@
+//! Disk is a in memory data structure that contains all the data of a single disk.
+//!
+//! Use [Disk] as the main API entry point.
 use std::{
     fs::File,
     io::{Read, Write},
@@ -7,6 +10,7 @@ use std::{
 
 use crate::{layout::Layout, Sector, Track};
 
+/// Disk provides a API way how tracks and sectors are logically layed out.
 pub struct Disk<L>
 where
     L: Layout,
@@ -104,7 +108,7 @@ where
     ///
     /// ```
     /// use d64::*;
-    /// let mut disk = Disk::<Commodore1541>::new();
+    /// let disk = Disk::<Commodore1541>::new();
     /// let _sector = disk.get_sector(18, 0);
     /// ```
     pub fn get_sector(&self, track_no: u8, sector_no: u8) -> &Sector {
@@ -115,6 +119,15 @@ where
         let index = (track_no - 1) as usize;
         &self.tracks[index]
     }
+    /// Get a specific sector for modification of this disk.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use d64::*;
+    /// let mut disk = Disk::<Commodore1541>::new();
+    /// let mut _sector = disk.get_sector_mut(18, 0);
+    /// ```
     pub fn get_sector_mut(&mut self, track_no: u8, sector_no: u8) -> &mut Sector {
         self.get_track_mut(track_no).get_sector_mut(sector_no)
     }
@@ -139,6 +152,17 @@ where
     pub fn get_name(&self) -> String {
         L::default().get_disk_name(self)
     }
+    /// Set the name of the disk
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use d64::*;
+    /// use std::path::*;
+    /// let mut disk = Disk::<Commodore1541>::new();
+    /// disk.set_name(&String::from("Hello"));
+    /// assert_eq!(disk.get_name(), "HELLO");
+    /// ```
     pub fn set_name(&mut self, new_name: &String) {
         L::default().set_disk_name(self, new_name)
     }

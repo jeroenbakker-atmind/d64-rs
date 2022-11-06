@@ -3,6 +3,14 @@ use crate::{
     PETSCII_TWO, PETSCII_ZERO,
 };
 
+/// Commodore 1541 disk-drive.
+///
+/// Contains all the logic how a Commodore 1541 (and compatible) disk drives
+/// store its data on a disk. It only supports the standard layout.
+///
+/// A Commodore 1541 can be programmed to store its data differently on the
+/// physical media. This programming isn't supported. When needed you have to
+/// implement your own Layout.
 #[derive(Default)]
 pub struct Commodore1541 {}
 
@@ -72,19 +80,11 @@ impl Layout for Commodore1541 {
         Self: Sized,
     {
         self.clear_disk(disk);
+        self.initialize_bam(disk);
         self.set_disk_name(disk, &String::from("NONAME"));
+        self.initialize_disk_id(disk);
+
         let sector = disk.get_sector_mut(18, 0);
-
-        // Initialize default ID (01-2A)
-        // Disk ID is 11 chars.
-        for offset in 160..171 {
-            sector.set_byte(offset, PETSCII_NBSP);
-        }
-        sector.set_byte(162, PETSCII_ZERO);
-        sector.set_byte(163, PETSCII_ONE);
-        sector.set_byte(165, PETSCII_TWO);
-        sector.set_byte(166, PETSCII_A);
-
         // Next sector (disk listing)
         sector.set_byte(0, 18);
         sector.set_byte(1, 1);
@@ -92,15 +92,6 @@ impl Layout for Commodore1541 {
         sector.set_byte(2, 65);
         // Unused.
         sector.set_byte(3, 0);
-
-        // Per track sector availability
-        for track_no in 1..=self.num_tracks() {
-            let num_sectors = self.num_sectors(track_no);
-            for sector_no in 0..num_sectors {
-                self.mark_sector_free(sector, track_no, sector_no);
-            }
-        }
-        self.mark_sector_used(sector, 18, 0);
 
         // TODO: init director_listing (18,1)
     }
@@ -119,7 +110,8 @@ impl Layout for Commodore1541 {
 }
 
 impl Commodore1541 {
-    fn mark_sector_free(&self, sector: &mut Sector, track_no: u8, sector_no: u8) {
+    fn mark_sector_unused(&self, disk: &mut Disk<Self>, track_no: u8, sector_no: u8) {
+        let sector = disk.get_sector_mut(18, 0);
         let track_offset = track_no as usize * 4;
         let sector_offset = (track_offset + sector_no as usize / 8) + 1;
         let shift = sector_no % 8;
@@ -133,7 +125,8 @@ impl Commodore1541 {
         }
     }
 
-    fn mark_sector_used(&self, sector: &mut Sector, track_no: u8, sector_no: u8) {
+    fn mark_sector_used(&self, disk: &mut Disk<Self>, track_no: u8, sector_no: u8) {
+        let sector = disk.get_sector_mut(18, 0);
         let track_offset = track_no as usize * 4;
         let sector_offset = (track_offset + sector_no as usize / 8) + 1;
         let shift = sector_no % 8;
@@ -145,5 +138,27 @@ impl Commodore1541 {
             let sectors_free = *sector.get_byte(track_offset);
             sector.set_byte(track_offset, sectors_free - 1);
         }
+    }
+
+    // Initialize the disk ID default=01-2A
+    fn initialize_disk_id(&self, disk: &mut Disk<Self>) {
+        let sector = disk.get_sector_mut(18, 0);
+        for offset in 160..171 {
+            sector.set_byte(offset, PETSCII_NBSP);
+        }
+        sector.set_byte(162, PETSCII_ZERO);
+        sector.set_byte(163, PETSCII_ONE);
+        sector.set_byte(165, PETSCII_TWO);
+        sector.set_byte(166, PETSCII_A);
+    }
+
+    fn initialize_bam(&self, disk: &mut Disk<Self>) {
+        for track_no in 1..=self.num_tracks() {
+            let num_sectors = self.num_sectors(track_no);
+            for sector_no in 0..num_sectors {
+                self.mark_sector_unused(disk, track_no, sector_no);
+            }
+        }
+        self.mark_sector_used(disk, 18, 0);
     }
 }
