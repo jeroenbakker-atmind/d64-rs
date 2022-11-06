@@ -17,4 +17,7 @@ name="format_disk"
 [[example]]
 name="list_disk"
 
+[[example]]
+name="read_file"
+
 [dependencies]

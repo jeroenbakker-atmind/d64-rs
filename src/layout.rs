@@ -36,4 +36,9 @@ pub trait Layout {
     fn list_entries(&self, disk: &Disk<Self>) -> Vec<Self::FileEntryType>
     where
         Self: Sized;
+
+    /// Return the contents of the given file.
+    fn read_file(&self, disk: &Disk<Self>, file_entry: &Self::FileEntryType) -> Vec<u8>
+    where
+        Self: Sized;
 }

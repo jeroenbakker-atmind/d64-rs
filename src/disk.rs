@@ -200,4 +200,9 @@ where
     pub fn list_entries(&mut self) -> Vec<L::FileEntryType> {
         L::default().list_entries(self)
     }
+
+    /// Read the contents of the given file.
+    pub fn read_file(&self, file_entry: &L::FileEntryType) -> Vec<u8> {
+        L::default().read_file(self, file_entry)
+    }
 }

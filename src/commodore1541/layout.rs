@@ -130,6 +130,17 @@ impl Layout for Commodore1541 {
         }
         result
     }
+
+    /// Return the contents of the given file.
+    fn read_file(&self, disk: &Disk<Self>, file_entry: &FileEntry) -> Vec<u8>
+    where
+        Self: Sized,
+    {
+        let mut result = Vec::new();
+        self.read_sector_chain(disk, file_entry.start_sector, &mut result);
+
+        result
+    }
 }
 
 impl Commodore1541 {
@@ -219,5 +230,28 @@ impl Commodore1541 {
     /// Mark the given sector to be the last sector in a chain.
     fn end_sector_chain(&self, sector: &mut Sector) {
         self.set_next_sector(sector, SECTOR_END_OF_CHAIN);
+    }
+
+    fn read_sector_chain(
+        &self,
+        disk: &Disk<Self>,
+        sector_ref: SectorRef,
+        file_content: &mut Vec<u8>,
+    ) {
+        const CONTENT_BYTES_PER_SECTOR: usize = 254;
+        if sector_ref.0 == SECTOR_END_OF_CHAIN.0 {
+            return;
+        }
+        let mut bytes = [0_u8; CONTENT_BYTES_PER_SECTOR];
+
+        let mut sector = disk.get_sector(sector_ref);
+        sector.get_bytes(2, &mut bytes);
+        file_content.extend_from_slice(&bytes);
+
+        while let Some(s) = self.get_next_sector(disk, sector) {
+            sector = s;
+            sector.get_bytes(2, &mut bytes);
+            file_content.extend_from_slice(&bytes);
+        }
     }
 }
