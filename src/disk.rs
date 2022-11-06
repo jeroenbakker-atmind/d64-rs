@@ -36,18 +36,7 @@ where
         disk
     }
 
-    /// Initialize the disk.
-    ///
-    /// During initialization the layout of the disk is applied.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use d64::*;
-    /// let mut disk = Disk::<Commodore1541>::new();
-    /// disk.initialize_layout();
-    /// ```
-    pub fn initialize_layout(&mut self) {
+    fn initialize_layout(&mut self) {
         self.tracks.clear();
         let layout = L::default();
         let num_tracks = layout.num_tracks();
@@ -116,7 +105,6 @@ where
     /// ```
     /// use d64::*;
     /// let mut disk = Disk::<Commodore1541>::new();
-    /// disk.initialize_layout();
     /// let _sector = disk.get_sector(18, 0);
     /// ```
     pub fn get_sector(&self, track_no: u8, sector_no: u8) -> &Sector {
@@ -144,7 +132,6 @@ where
     /// use d64::*;
     /// use std::path::*;
     /// let mut disk = Disk::<Commodore1541>::new();
-    /// disk.initialize_layout();
     /// let path = Path::new("./disks/1541-empty.d64");
     /// disk.read_from_path(&path).unwrap();
     /// assert_eq!(disk.get_name(), "EMPTY");
@@ -163,7 +150,6 @@ where
     /// ```
     /// use d64::*;
     /// let mut disk = Disk::<Commodore1541>::new();
-    /// disk.initialize_layout();
     /// disk.format();
     /// ```
     pub fn format(&mut self) {
