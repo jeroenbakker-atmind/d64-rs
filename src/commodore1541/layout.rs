@@ -1,6 +1,6 @@
 use crate::{
-    decode_petscii, encode_petscii, Disk, Layout, Sector, PETSCII_A, PETSCII_NBSP, PETSCII_ONE,
-    PETSCII_TWO, PETSCII_ZERO,
+    decode_petscii, encode_petscii, Disk, FileEntry, FileType, Layout, Sector, PETSCII_A,
+    PETSCII_NBSP, PETSCII_ONE, PETSCII_TWO, PETSCII_ZERO,
 };
 
 /// Commodore 1541 disk-drive.
@@ -98,6 +98,27 @@ impl Layout for Commodore1541 {
             }
         }
     }
+
+    fn list_entries(&self, disk: &Disk<Self>) -> Vec<FileEntry>
+    where
+        Self: Sized,
+    {
+        let mut result = Vec::new();
+        let mut sector = disk.get_sector(18, 0);
+        while let Some(s) = self.get_next_sector(disk, sector) {
+            sector = s;
+
+            let mut entry_bytes = [0_u8; 16];
+            for sector_entry in 0..8 {
+                sector.get_bytes(sector_entry * 32, &mut entry_bytes);
+                let entry = FileEntry::from_bytes(&entry_bytes);
+                if entry.file_type != FileType::Scratched {
+                    result.push(entry);
+                }
+            }
+        }
+        result
+    }
 }
 
 impl Commodore1541 {
@@ -170,6 +191,16 @@ impl Commodore1541 {
     fn set_next_sector(&self, sector: &mut Sector, track_no: u8, sector_no: u8) {
         sector.set_byte(0, track_no);
         sector.set_byte(1, sector_no);
+    }
+
+    fn get_next_sector<'a>(&self, disk: &'a Disk<Self>, sector: &Sector) -> Option<&'a Sector> {
+        let track_no = *sector.get_byte(0);
+        let sector_no = *sector.get_byte(1);
+        if track_no == 0 && sector_no == 255 {
+            None
+        } else {
+            Some(disk.get_sector(track_no, sector_no))
+        }
     }
 
     /// Mark the given sector to be the last sector in a chain.

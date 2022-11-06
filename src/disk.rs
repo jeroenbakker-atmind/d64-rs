@@ -8,7 +8,7 @@ use std::{
     path::Path,
 };
 
-use crate::{layout::Layout, Sector, Track};
+use crate::{layout::Layout, FileEntry, Sector, Track};
 
 /// Disk provides a API way how tracks and sectors are logically layed out.
 pub struct Disk<L>
@@ -182,5 +182,9 @@ where
     /// ```
     pub fn format(&mut self) {
         L::default().format_disk(self);
+    }
+
+    pub fn list_entries(&mut self) -> Vec<FileEntry> {
+        L::default().list_entries(self)
     }
 }

@@ -29,6 +29,12 @@ impl Sector {
     pub fn set_byte(&mut self, offset: usize, byte: u8) {
         self.data[offset] = byte;
     }
+    pub fn get_bytes(&self, offset: usize, result: &mut [u8]) {
+        for i in 0..result.len() {
+            let byte = *self.get_byte(offset + i);
+            result[i] = byte;
+        }
+    }
     pub fn fill(&mut self, start_offset: usize, end_offset: usize, byte: u8) {
         for offset in start_offset..end_offset {
             self.set_byte(offset, byte);

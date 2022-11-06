@@ -1,4 +1,4 @@
-use crate::Disk;
+use crate::{Disk, FileEntry};
 
 /// Layout trait to map how a specific device uses its physical media (Disk).
 ///
@@ -27,6 +27,12 @@ pub trait Layout {
 
     /// Set all content of the disk to 0. (each track, sector, byte)
     fn clear_disk(&self, disk: &mut Disk<Self>)
+    where
+        Self: Sized;
+
+    /// List all file entries of the given disk.
+    // TODO: Use trait typing.
+    fn list_entries(&self, disk: &Disk<Self>) -> Vec<FileEntry>
     where
         Self: Sized;
 }
