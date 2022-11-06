@@ -13,5 +13,6 @@ Still in early development.
 * [x] Format disk.
 * [ ] List entries.
 * [ ] Read file.
+* [ ] Create file.
 * [ ] Write file.
 * [x] Disk IDs. (01-2A signature)
