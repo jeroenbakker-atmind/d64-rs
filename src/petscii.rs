@@ -108,6 +108,18 @@ impl PetsciiString {
     }
 }
 
+impl From<&String> for PetsciiString {
+    fn from(src: &String) -> PetsciiString {
+        let mut result = PetsciiString {
+            bytes: Vec::with_capacity(src.len()),
+        };
+        for ch in src.chars() {
+            result.bytes.push(encode_petscii(ch, PETSCII_NBSP));
+        }
+        result
+    }
+}
+
 impl From<&PetsciiString> for String {
     fn from(src: &PetsciiString) -> String {
         let mut result = String::new();

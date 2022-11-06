@@ -1,4 +1,4 @@
-use crate::{Disk, FileEntry};
+use crate::Disk;
 
 /// Layout trait to map how a specific device uses its physical media (Disk).
 ///
@@ -6,6 +6,8 @@ use crate::{Disk, FileEntry};
 /// features like tracks, sectors are exposed by this trait to have a common
 /// API.
 pub trait Layout {
+    type FileEntryType;
+
     /// Number of tracks that are created on the physical media.
     fn num_tracks(&self) -> u8;
     /// Number of sectors that are created on the physical media for a certain track.
@@ -31,8 +33,7 @@ pub trait Layout {
         Self: Sized;
 
     /// List all file entries of the given disk.
-    // TODO: Use trait typing.
-    fn list_entries(&self, disk: &Disk<Self>) -> Vec<FileEntry>
+    fn list_entries(&self, disk: &Disk<Self>) -> Vec<Self::FileEntryType>
     where
         Self: Sized;
 }

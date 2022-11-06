@@ -15,6 +15,9 @@ use crate::{
 pub struct Commodore1541 {}
 
 impl Layout for Commodore1541 {
+    /// Type to contain a single entry for [Layout::list_entries].
+    type FileEntryType = FileEntry;
+
     fn num_tracks(&self) -> u8 {
         return 35;
     }

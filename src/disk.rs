@@ -8,7 +8,7 @@ use std::{
     path::Path,
 };
 
-use crate::{layout::Layout, FileEntry, Sector, Track};
+use crate::{layout::Layout, Sector, Track};
 
 /// Disk provides a API way how tracks and sectors are logically layed out.
 pub struct Disk<L>
@@ -184,7 +184,19 @@ where
         L::default().format_disk(self);
     }
 
-    pub fn list_entries(&mut self) -> Vec<FileEntry> {
+    /// List file entries of disk.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use d64::*;
+    /// use std::path::*;
+    /// let mut disk = Disk::<Commodore1541>::new();
+    /// let path = Path::new("./disks/1541-empty.d64");
+    /// disk.read_from_path(&path).unwrap();
+    /// let entries = disk.list_entries();
+    /// ```
+    pub fn list_entries(&mut self) -> Vec<L::FileEntryType> {
         L::default().list_entries(self)
     }
 }
