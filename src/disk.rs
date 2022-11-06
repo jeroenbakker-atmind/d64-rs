@@ -25,6 +25,10 @@ where
 {
     /// Create a new instance of a disk.
     ///
+    /// The disk layout will be initialized, but the disk isn't formatted yet.
+    /// to format the disk check [Disk::format]
+    ///
+    ///
     /// # Example
     ///
     /// ```

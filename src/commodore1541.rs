@@ -80,20 +80,11 @@ impl Layout for Commodore1541 {
         Self: Sized,
     {
         self.clear_disk(disk);
+        self.initialize_dos_version(disk);
         self.initialize_bam(disk);
         self.set_disk_name(disk, &String::from("NONAME"));
         self.initialize_disk_id(disk);
-
-        let sector = disk.get_sector_mut(18, 0);
-        // Next sector (disk listing)
-        sector.set_byte(0, 18);
-        sector.set_byte(1, 1);
-        // DOS Version
-        sector.set_byte(2, 65);
-        // Unused.
-        sector.set_byte(3, 0);
-
-        // TODO: init director_listing (18,1)
+        self.initialize_directory_listing(disk);
     }
 
     fn clear_disk(&self, disk: &mut Disk<Self>)
@@ -152,6 +143,11 @@ impl Commodore1541 {
         sector.set_byte(166, PETSCII_A);
     }
 
+    fn initialize_dos_version(&self, disk: &mut Disk<Self>) {
+        let sector = disk.get_sector_mut(18, 0);
+        sector.set_byte(2, 65);
+    }
+
     fn initialize_bam(&self, disk: &mut Disk<Self>) {
         for track_no in 1..=self.num_tracks() {
             let num_sectors = self.num_sectors(track_no);
@@ -160,5 +156,24 @@ impl Commodore1541 {
             }
         }
         self.mark_sector_used(disk, 18, 0);
+    }
+
+    fn initialize_directory_listing(&self, disk: &mut Disk<Self>) {
+        let sector180 = disk.get_sector_mut(18, 0);
+        self.set_next_sector(sector180, 18, 1);
+
+        let sector181 = disk.get_sector_mut(18, 1);
+        self.end_sector_chain(sector181);
+    }
+
+    /// Set the next sector for the given sector in a chain of sectors.
+    fn set_next_sector(&self, sector: &mut Sector, track_no: u8, sector_no: u8) {
+        sector.set_byte(0, track_no);
+        sector.set_byte(1, sector_no);
+    }
+
+    /// Mark the given sector to be the last sector in a chain.
+    fn end_sector_chain(&self, sector: &mut Sector) {
+        self.set_next_sector(sector, 0, 255);
     }
 }
