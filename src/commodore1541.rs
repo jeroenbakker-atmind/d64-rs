@@ -71,24 +71,22 @@ impl Layout for Commodore1541 {
         self.clear_disk(disk);
 
         let sector = disk.get_sector_mut(18, 1);
-        // Next sector points to self.
+        // Next sector (disk listing)
         sector.set_byte(0, 18);
         sector.set_byte(1, 1);
-        // Magic bytes.
+        // DOS Version
         sector.set_byte(2, 65);
+        // Unused.
         sector.set_byte(3, 0);
 
-        // Sectors per track records.
-        // and sector availability records.
-        let mut offset = 4;
+        // Per track sector availability
         for track_no in 1..=self.num_tracks() {
             let num_sectors = self.num_sectors(track_no);
-            sector.set_byte(offset, num_sectors);
-            for sector_no in 1..num_sectors {
+            for sector_no in 0..num_sectors {
                 self.mark_sector_free(sector, track_no, sector_no);
             }
-            offset += 4;
         }
+        self.mark_sector_used(sector, 18, 0);
         self.set_disk_name(disk, &String::from("NONAME"));
     }
 
@@ -107,11 +105,30 @@ impl Layout for Commodore1541 {
 
 impl Commodore1541 {
     fn mark_sector_free(&self, sector: &mut Sector, track_no: u8, sector_no: u8) {
-        let offset = (track_no as usize * 4 + sector_no as usize / 8) + 1;
+        let track_offset = track_no as usize * 4;
+        let sector_offset = (track_offset + sector_no as usize / 8) + 1;
         let shift = sector_no % 8;
         let bit_mask = (1 as u8) << shift;
-        let mut availability = *sector.get_byte(offset);
-        availability |= bit_mask;
-        sector.set_byte(offset, availability);
+        let availability = *sector.get_byte(sector_offset);
+        let new_availability = availability | bit_mask;
+        sector.set_byte(sector_offset, new_availability);
+        if availability != new_availability {
+            let sectors_free = *sector.get_byte(track_offset);
+            sector.set_byte(track_offset, sectors_free + 1);
+        }
+    }
+
+    fn mark_sector_used(&self, sector: &mut Sector, track_no: u8, sector_no: u8) {
+        let track_offset = track_no as usize * 4;
+        let sector_offset = (track_offset + sector_no as usize / 8) + 1;
+        let shift = sector_no % 8;
+        let bit_mask = (1 as u8) << shift;
+        let availability = *sector.get_byte(sector_offset);
+        let new_availability = availability & (255 - bit_mask);
+        sector.set_byte(sector_offset, new_availability);
+        if availability != new_availability {
+            let sectors_free = *sector.get_byte(track_offset);
+            sector.set_byte(track_offset, sectors_free - 1);
+        }
     }
 }
