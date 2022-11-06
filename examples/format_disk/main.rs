@@ -7,6 +7,6 @@ fn main() -> std::io::Result<()> {
     disk.initialize_layout();
     disk.format();
     disk.write_to_path(Path::new("./1541-format-test.d64"))?;
-    disk.get_sector(18, 1).print();
+    disk.get_sector(18, 0).print();
     Ok(())
 }

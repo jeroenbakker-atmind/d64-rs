@@ -117,7 +117,7 @@ where
     /// use d64::*;
     /// let mut disk = Disk::<Commodore1541>::new();
     /// disk.initialize_layout();
-    /// let _sector = disk.get_sector(18, 1);
+    /// let _sector = disk.get_sector(18, 0);
     /// ```
     pub fn get_sector(&self, track_no: u8, sector_no: u8) -> &Sector {
         self.get_track(track_no).get_sector(sector_no)

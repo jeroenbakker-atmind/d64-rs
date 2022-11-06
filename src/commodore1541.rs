@@ -32,7 +32,7 @@ impl Layout for Commodore1541 {
     where
         Self: Sized,
     {
-        let sector = disk.get_sector(18, 1);
+        let sector = disk.get_sector(18, 0);
         let name_start = 9 * 16;
         let name_end = name_start + 16;
         let mut name = String::new();
@@ -50,7 +50,7 @@ impl Layout for Commodore1541 {
     where
         Self: Sized,
     {
-        let sector = disk.get_sector_mut(18, 1);
+        let sector = disk.get_sector_mut(18, 0);
         // TODO: max 16 chars.
         let mut name = new_name.clone();
         let name_start = 9 * 16;
@@ -70,7 +70,7 @@ impl Layout for Commodore1541 {
     {
         self.clear_disk(disk);
 
-        let sector = disk.get_sector_mut(18, 1);
+        let sector = disk.get_sector_mut(18, 0);
         // Next sector (disk listing)
         sector.set_byte(0, 18);
         sector.set_byte(1, 1);
@@ -95,7 +95,7 @@ impl Layout for Commodore1541 {
         Self: Sized,
     {
         for track_no in 1..=self.num_tracks() {
-            for sector_no in 1..=self.num_sectors(track_no) {
+            for sector_no in 0..self.num_sectors(track_no) {
                 let sector = disk.get_sector_mut(track_no, sector_no);
                 sector.fill(0, self.bytes_per_sector() as usize, 0);
             }
