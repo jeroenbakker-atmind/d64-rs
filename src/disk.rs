@@ -8,7 +8,7 @@ use std::{
     path::Path,
 };
 
-use crate::{layout::Layout, Sector, SectorRef, Track, TrackNo};
+use crate::{layout::Layout, Sector, SectorRef, Track, TrackNo, PetsciiString};
 
 /// Disk provides a API way how tracks and sectors are logically layed out.
 #[derive(Default)]
@@ -150,9 +150,9 @@ where
     /// let mut disk = Disk::<Commodore1541>::new();
     /// let path = Path::new("./disks/1541-empty.d64");
     /// disk.read_from_path(&path).unwrap();
-    /// assert_eq!(disk.get_name(), "EMPTY");
+    /// assert_eq!(String::from(&disk.get_name()), "EMPTY");
     /// ```
-    pub fn get_name(&self) -> String {
+    pub fn get_name(&self) -> PetsciiString {
         L::default().get_disk_name(self)
     }
     /// Set the name of the disk
@@ -164,7 +164,7 @@ where
     /// use std::path::*;
     /// let mut disk = Disk::<Commodore1541>::new();
     /// disk.set_name(&String::from("Hello"));
-    /// assert_eq!(disk.get_name(), "HELLO");
+    /// assert_eq!(String::from(&disk.get_name()), "HELLO");
     /// ```
     pub fn set_name(&mut self, new_name: &String) {
         L::default().set_disk_name(self, new_name)

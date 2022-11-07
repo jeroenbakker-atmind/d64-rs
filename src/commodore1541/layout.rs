@@ -1,6 +1,6 @@
 use crate::{
-    decode_petscii, encode_petscii, Disk, FileEntry, FileType, Layout, Sector, SectorRef, TrackNo,
-    PETSCII_A, PETSCII_NBSP, PETSCII_ONE, PETSCII_TWO, PETSCII_ZERO,
+    encode_petscii, Disk, FileEntry, FileType, Layout, Sector, SectorRef, TrackNo,
+    PETSCII_A, PETSCII_NBSP, PETSCII_ONE, PETSCII_TWO, PETSCII_ZERO, PetsciiString,
 };
 
 /// Reference to the sector containing the BAM, disk name and disk id.
@@ -49,22 +49,15 @@ impl Layout for Commodore1541 {
         256
     }
 
-    fn get_disk_name(&self, disk: &Disk<Self>) -> String
+    fn get_disk_name(&self, disk: &Disk<Self>) -> PetsciiString
     where
         Self: Sized,
     {
         let sector = disk.get_sector(SECTOR_DISK_HEADER);
         let name_start = 9 * 16;
-        let name_end = name_start + 16;
-        let mut name = String::new();
-        for offset in name_start..name_end {
-            let byte = *sector.get_byte(offset);
-            if byte == PETSCII_NBSP {
-                break;
-            }
-            name.push(decode_petscii(byte));
-        }
-        name
+        let mut bytes = [0_u8;16];
+        sector.get_bytes(name_start, &mut bytes);
+        PetsciiString::fixed_size(&bytes)
     }
 
     fn set_disk_name(&self, disk: &mut Disk<Self>, new_name: &String)
