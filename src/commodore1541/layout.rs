@@ -1,6 +1,6 @@
 use crate::{
-    encode_petscii, Disk, FileEntry, FileType, Layout, Sector, SectorRef, TrackNo,
-    PETSCII_A, PETSCII_NBSP, PETSCII_ONE, PETSCII_TWO, PETSCII_ZERO, PetsciiString,
+    Disk, FileEntry, FileType, Layout, PetsciiString, Sector, SectorRef, TrackNo, PETSCII_A,
+    PETSCII_NBSP, PETSCII_ONE, PETSCII_TWO, PETSCII_ZERO,
 };
 
 /// Reference to the sector containing the BAM, disk name and disk id.
@@ -55,7 +55,7 @@ impl Layout for Commodore1541 {
     {
         let sector = disk.get_sector(SECTOR_DISK_HEADER);
         let name_start = 9 * 16;
-        let mut bytes = [0_u8;16];
+        let mut bytes = [0_u8; 16];
         sector.get_bytes(name_start, &mut bytes);
         PetsciiString::fixed_size(&bytes)
     }
@@ -66,16 +66,12 @@ impl Layout for Commodore1541 {
     {
         let sector = disk.get_sector_mut(SECTOR_DISK_HEADER);
         // TODO: max 16 chars.
-        let mut name = new_name.clone();
+        let petscii_string = PetsciiString::from(new_name);
+        let bytes = petscii_string.bytes.as_slice();
         let name_start = 9 * 16;
         let name_end = name_start + 16;
         sector.fill(name_start, name_end, PETSCII_NBSP);
-        let mut name_pos = name_start + new_name.len() - 1;
-        while let Some(ch) = name.pop() {
-            let byte = encode_petscii(ch, PETSCII_NBSP);
-            sector.set_byte(name_pos, byte);
-            name_pos -= 1;
-        }
+        sector.set_bytes(name_start, bytes);
     }
 
     fn format_disk(&self, disk: &mut Disk<Self>)

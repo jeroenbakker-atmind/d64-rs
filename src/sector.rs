@@ -33,6 +33,11 @@ impl Sector {
             *item = byte;
         }
     }
+    pub fn set_bytes(&mut self, offset: usize, result: &[u8]) {
+        for (i, item) in result.iter().enumerate() {
+            self.set_byte(offset + i, *item);
+        }
+    }
     pub fn fill(&mut self, start_offset: usize, end_offset: usize, byte: u8) {
         for offset in start_offset..end_offset {
             self.set_byte(offset, byte);
