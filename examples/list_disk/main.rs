@@ -15,5 +15,6 @@ fn main() -> std::io::Result<()> {
             entry.file_type
         );
     }
+    println!("{} free blocks", disk.num_unused_sectors());
     Ok(())
 }

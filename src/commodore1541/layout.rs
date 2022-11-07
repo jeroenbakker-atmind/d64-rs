@@ -1,6 +1,6 @@
 use crate::{
-    Disk, FileEntry, FileType, Layout, PetsciiString, Sector, SectorRef, TrackNo, PETSCII_A,
-    PETSCII_NBSP, PETSCII_ONE, PETSCII_TWO, PETSCII_ZERO,
+    BlockAvailabilityMap, Disk, FileEntry, FileType, Layout, PetsciiString, Sector, SectorRef,
+    TrackNo, PETSCII_A, PETSCII_NBSP, PETSCII_ONE, PETSCII_TWO, PETSCII_ZERO,
 };
 
 /// Reference to the sector containing the BAM, disk name and disk id.
@@ -130,37 +130,25 @@ impl Layout for Commodore1541 {
 
         result
     }
+
+    fn num_unused_sectors(&self, disk: &mut Disk<Self>) -> usize
+    where
+        Self: Sized,
+    {
+        let bam = self.get_block_availability_map(disk);
+        bam.count_unused_sectors(1, self.num_tracks())
+    }
 }
 
 impl Commodore1541 {
-    fn mark_sector_unused(&self, disk: &mut Disk<Self>, sector_ref: SectorRef) {
+    fn get_block_availability_map<'a>(&self, disk: &'a mut Disk<Self>) -> BlockAvailabilityMap<'a> {
         let sector = disk.get_sector_mut(SECTOR_DISK_HEADER);
-        let track_offset = sector_ref.0 as usize * 4;
-        let sector_offset = (track_offset + sector_ref.1 as usize / 8) + 1;
-        let shift = sector_ref.1 % 8;
-        let bit_mask = (1_u8) << shift;
-        let availability = *sector.get_byte(sector_offset);
-        let new_availability = availability | bit_mask;
-        sector.set_byte(sector_offset, new_availability);
-        if availability != new_availability {
-            let sectors_free = *sector.get_byte(track_offset);
-            sector.set_byte(track_offset, sectors_free + 1);
-        }
+        BlockAvailabilityMap::new(sector)
     }
 
     fn mark_sector_used(&self, disk: &mut Disk<Self>, sector_ref: SectorRef) {
-        let sector = disk.get_sector_mut(SECTOR_DISK_HEADER);
-        let track_offset = sector_ref.0 as usize * 4;
-        let sector_offset = (track_offset + sector_ref.1 as usize / 8) + 1;
-        let shift = sector_ref.1 % 8;
-        let bit_mask = (1_u8) << shift;
-        let availability = *sector.get_byte(sector_offset);
-        let new_availability = availability & (255 - bit_mask);
-        sector.set_byte(sector_offset, new_availability);
-        if availability != new_availability {
-            let sectors_free = *sector.get_byte(track_offset);
-            sector.set_byte(track_offset, sectors_free - 1);
-        }
+        let mut bam = self.get_block_availability_map(disk);
+        bam.mark_used(sector_ref);
     }
 
     // Initialize the disk ID default=01-2A
@@ -181,13 +169,14 @@ impl Commodore1541 {
     }
 
     fn initialize_bam(&self, disk: &mut Disk<Self>) {
+        let mut bam = self.get_block_availability_map(disk);
         for track_no in 1..=self.num_tracks() {
             let num_sectors = self.num_sectors(track_no);
             for sector_no in 0..num_sectors {
-                self.mark_sector_unused(disk, (track_no, sector_no));
+                bam.mark_unused((track_no, sector_no));
             }
         }
-        self.mark_sector_used(disk, SECTOR_DISK_HEADER);
+        bam.mark_used(SECTOR_DISK_HEADER);
     }
 
     fn initialize_directory_listing(&self, disk: &mut Disk<Self>) {

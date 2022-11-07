@@ -1,4 +1,4 @@
-use crate::{Disk, TrackNo, PetsciiString};
+use crate::{Disk, PetsciiString, TrackNo};
 
 /// Layout trait to map how a specific device uses its physical media (Disk).
 ///
@@ -39,6 +39,10 @@ pub trait Layout {
 
     /// Return the contents of the given file.
     fn read_file(&self, disk: &Disk<Self>, file_entry: &Self::FileEntryType) -> Vec<u8>
+    where
+        Self: Sized;
+
+    fn num_unused_sectors(&self, disk: &mut Disk<Self>) -> usize
     where
         Self: Sized;
 }

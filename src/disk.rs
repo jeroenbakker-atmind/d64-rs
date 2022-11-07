@@ -8,7 +8,7 @@ use std::{
     path::Path,
 };
 
-use crate::{layout::Layout, Sector, SectorRef, Track, TrackNo, PetsciiString};
+use crate::{layout::Layout, PetsciiString, Sector, SectorRef, Track, TrackNo};
 
 /// Disk provides a API way how tracks and sectors are logically layed out.
 #[derive(Default)]
@@ -197,6 +197,20 @@ where
     /// ```
     pub fn list_entries(&mut self) -> Vec<L::FileEntryType> {
         L::default().list_entries(self)
+    }
+
+    /// Count number of unused sectors
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use d64::*;
+    /// let mut disk = Disk::<Commodore1541>::new();
+    /// disk.format();
+    /// assert_eq!(disk.num_unused_sectors(), 280);
+    /// ```
+    pub fn num_unused_sectors(&mut self) -> usize {
+        L::default().num_unused_sectors(self)
     }
 
     /// Read the contents of the given file.
