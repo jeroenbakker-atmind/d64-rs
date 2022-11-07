@@ -84,16 +84,16 @@ pub fn decode_petscii(petscii: u8) -> char {
 /// assert_eq!(encode_petscii('9', PETSCII_NBSP), PETSCII_NINE);
 /// ```
 pub fn encode_petscii(ascii: char, default: u8) -> u8 {
-    if ascii >= 'A' && ascii <= 'Z' {
-        return (ascii as u8 - 'A' as u8) + PETSCII_A;
+    if ('A'..='Z').contains(&ascii) {
+        return (ascii as u8 - b'A') + PETSCII_A;
     }
-    if ascii >= 'a' && ascii <= 'z' {
-        return (ascii as u8 - 'a' as u8) + PETSCII_A;
+    if ('a'..='z').contains(&ascii) {
+        return (ascii as u8 - b'a') + PETSCII_A;
     }
-    if ascii >= '0' && ascii <= '9' {
-        return (ascii as u8 - '0' as u8) + PETSCII_ZERO;
+    if ('0'..='9').contains(&ascii) {
+        return (ascii as u8 - b'0') + PETSCII_ZERO;
     }
-    return default;
+    default
 }
 
 #[derive(Debug)]

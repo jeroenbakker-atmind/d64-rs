@@ -13,14 +13,12 @@ impl Sector {
         self.data.resize(data_len, 0);
     }
 
-    pub fn read_from_reader<R: Read>(&mut self, reader: &mut R) -> std::io::Result<()> {
+    pub fn read_from_reader<R: Read>(&mut self, reader: &mut R) -> std::io::Result<usize> {
         // TODO raise error when not all bytes could be read.
-        reader.read(self.data.as_mut_slice())?;
-        Ok(())
+        reader.read(self.data.as_mut_slice())
     }
-    pub fn write_to_writer<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
-        writer.write(self.data.as_slice())?;
-        Ok(())
+    pub fn write_to_writer<W: Write>(&self, writer: &mut W) -> std::io::Result<usize> {
+        writer.write(self.data.as_slice())
     }
 
     pub fn get_byte(&self, offset: usize) -> &u8 {
@@ -30,9 +28,9 @@ impl Sector {
         self.data[offset] = byte;
     }
     pub fn get_bytes(&self, offset: usize, result: &mut [u8]) {
-        for i in 0..result.len() {
+        for (i, item) in result.iter_mut().enumerate() {
             let byte = *self.get_byte(offset + i);
-            result[i] = byte;
+            *item = byte;
         }
     }
     pub fn fill(&mut self, start_offset: usize, end_offset: usize, byte: u8) {

@@ -26,7 +26,7 @@ impl Layout for Commodore1541 {
     type FileEntryType = FileEntry;
 
     fn num_tracks(&self) -> u8 {
-        return 35;
+        35
     }
 
     fn num_sectors(&self, track: TrackNo) -> u8 {
@@ -42,7 +42,7 @@ impl Layout for Commodore1541 {
         if (31..=35).contains(&track) {
             return 17;
         }
-        return 0;
+        0
     }
 
     fn bytes_per_sector(&self) -> u16 {
@@ -149,7 +149,7 @@ impl Commodore1541 {
         let track_offset = sector_ref.0 as usize * 4;
         let sector_offset = (track_offset + sector_ref.1 as usize / 8) + 1;
         let shift = sector_ref.1 % 8;
-        let bit_mask = (1 as u8) << shift;
+        let bit_mask = (1_u8) << shift;
         let availability = *sector.get_byte(sector_offset);
         let new_availability = availability | bit_mask;
         sector.set_byte(sector_offset, new_availability);
@@ -164,7 +164,7 @@ impl Commodore1541 {
         let track_offset = sector_ref.0 as usize * 4;
         let sector_offset = (track_offset + sector_ref.1 as usize / 8) + 1;
         let shift = sector_ref.1 % 8;
-        let bit_mask = (1 as u8) << shift;
+        let bit_mask = (1_u8) << shift;
         let availability = *sector.get_byte(sector_offset);
         let new_availability = availability & (255 - bit_mask);
         sector.set_byte(sector_offset, new_availability);

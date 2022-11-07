@@ -1,6 +1,6 @@
 use crate::{PetsciiString, SectorRef};
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub enum FileType {
     Scratched = 0x00,
     Deleted = 0x80,

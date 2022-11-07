@@ -11,6 +11,7 @@ use std::{
 use crate::{layout::Layout, Sector, SectorRef, Track, TrackNo};
 
 /// Disk provides a API way how tracks and sectors are logically layed out.
+#[derive(Default)]
 pub struct Disk<L>
 where
     L: Layout,
@@ -36,10 +37,7 @@ where
     /// let _disk = Disk::<Commodore1541>::new();
     /// ```
     pub fn new() -> Self {
-        let mut disk = Disk::<L> {
-            layout: PhantomData::<L>::default(),
-            tracks: Vec::default(),
-        };
+        let mut disk = Disk::<L>::default();
         disk.initialize_layout();
         disk
     }
