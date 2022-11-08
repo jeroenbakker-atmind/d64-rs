@@ -1,6 +1,6 @@
-use crate::{PetsciiString, SectorRef};
+use crate::{PetsciiString, Sector, SectorRef, PETSCII_NBSP};
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum FileType {
     Scratched = 0x00,
     Deleted = 0x80,
@@ -24,7 +24,19 @@ impl From<u8> for FileType {
     }
 }
 
-#[derive(Debug)]
+impl From<FileType> for u8 {
+    fn from(src: FileType) -> u8 {
+        src as u8
+    }
+}
+
+impl Default for FileType {
+    fn default() -> FileType {
+        FileType::Program
+    }
+}
+
+#[derive(Debug, Clone, Default)]
 pub struct FileEntry {
     pub name: PetsciiString,
     pub file_type: FileType,
@@ -45,4 +57,16 @@ impl FileEntry {
             start_sector,
         }
     }
+
+    pub fn store(&self, sector: &mut Sector, offset: usize) {
+        sector.set_byte(offset + 2, u8::from(self.file_type));
+        sector.set_byte(offset + 3, self.start_sector.0);
+        sector.set_byte(offset + 4, self.start_sector.1);
+        sector.fill(offset + 5, offset + 5 + 16, PETSCII_NBSP);
+        sector.set_bytes(offset + 5, self.name.bytes.as_slice());
+        sector.set_byte(offset + 31, (self.num_blocks / 256) as u8);
+        sector.set_byte(offset + 30, (self.num_blocks % 256) as u8)
+    }
 }
+
+pub type FileListEntryRef = (SectorRef, usize);

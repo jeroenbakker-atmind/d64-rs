@@ -96,7 +96,7 @@ pub fn encode_petscii(ascii: char, default: u8) -> u8 {
     default
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Default)]
 pub struct PetsciiString {
     pub bytes: Vec<u8>,
 }

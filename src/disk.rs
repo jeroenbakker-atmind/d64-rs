@@ -217,4 +217,8 @@ where
     pub fn read_file(&self, file_entry: &L::FileEntryType) -> Vec<u8> {
         L::default().read_file(self, file_entry)
     }
+
+    pub fn create_file(&mut self, file_entry: &L::FileEntryType, content: &[u8]) {
+        L::default().create_file(self, file_entry, content);
+    }
 }

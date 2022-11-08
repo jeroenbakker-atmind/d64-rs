@@ -1,9 +1,9 @@
 use crate::{
-    BlockAvailabilityMap, Disk, FileEntry, FileType, Layout, PetsciiString, Sector, SectorRef,
-    TrackNo, PETSCII_A, PETSCII_NBSP, PETSCII_ONE, PETSCII_TWO, PETSCII_ZERO,
+    BlockAvailabilityMap, Disk, FileEntry, FileListEntryRef, FileType, Layout, PetsciiString,
+    Sector, SectorRef, TrackNo, PETSCII_A, PETSCII_NBSP, PETSCII_ONE, PETSCII_TWO, PETSCII_ZERO,
 };
 
-/// Track number containing info about the disk, and files on the disk. 
+/// Track number containing info about the disk, and files on the disk.
 const TRACK_HEADER: TrackNo = 18;
 /// Reference to the sector containing the BAM, disk name and disk id.
 const SECTOR_DISK_HEADER: SectorRef = (TRACK_HEADER, 0);
@@ -11,7 +11,12 @@ const SECTOR_DISK_HEADER: SectorRef = (TRACK_HEADER, 0);
 const SECTOR_DISK_LISTING: SectorRef = (TRACK_HEADER, 1);
 /// Indicates that marks the end of a chain of sectors.
 const SECTOR_END_OF_CHAIN: SectorRef = (0, 255);
+/// Header of a sector is 2 bytes. It contains the sector ref to the next sector, or SECTOR_END_OF_CHAIN for the last.
+const SECTOR_HEADER_SIZE: usize = 2;
+/// Size of actual content that can be stored in a single sector.
+const CONTENT_BYTES_PER_SECTOR: usize = 254;
 
+const FILE_LIST_ENTRY_SIZE: usize = 32;
 /// Commodore 1541 disk-drive.
 ///
 /// Contains all the logic how a Commodore 1541 (and compatible) disk drives
@@ -104,15 +109,14 @@ impl Layout for Commodore1541 {
     where
         Self: Sized,
     {
-        const BYTES_PER_ENTRY: usize = 32;
         let mut result = Vec::new();
         let mut sector = disk.get_sector(SECTOR_DISK_HEADER);
         while let Some(s) = self.get_next_sector(disk, sector) {
-            sector = s;
+            sector = s.0;
 
-            let mut entry_bytes = [0_u8; BYTES_PER_ENTRY];
+            let mut entry_bytes = [0_u8; FILE_LIST_ENTRY_SIZE];
             for sector_entry in 0..8 {
-                sector.get_bytes(sector_entry * BYTES_PER_ENTRY, &mut entry_bytes);
+                sector.get_bytes(sector_entry * FILE_LIST_ENTRY_SIZE, &mut entry_bytes);
                 let entry = FileEntry::from_bytes(&entry_bytes);
                 if entry.file_type != FileType::Scratched {
                     result.push(entry);
@@ -133,12 +137,33 @@ impl Layout for Commodore1541 {
         result
     }
 
+    /// Create a new file and store it to disk.
+    fn create_file(&self, disk: &mut Disk<Self>, file_entry: &Self::FileEntryType, content: &[u8])
+    where
+        Self: Sized,
+    {
+        let chunks = content.chunks(CONTENT_BYTES_PER_SECTOR);
+        let num_sectors = chunks.len();
+        if let Some(sectors) = self.allocate_sectors(disk, num_sectors) {
+            for (sector_ref, chunk) in sectors.iter().zip(chunks) {
+                let sector = disk.get_sector_mut(*sector_ref);
+                sector.set_bytes(SECTOR_HEADER_SIZE, chunk);
+            }
+
+            let mut file_entry = file_entry.clone();
+            file_entry.start_sector = sectors[0];
+            file_entry.num_blocks = num_sectors;
+            self.create_file_list_entry(disk, &file_entry);
+        }
+    }
+
     fn num_unused_sectors(&self, disk: &mut Disk<Self>) -> usize
     where
         Self: Sized,
     {
         let bam = self.get_block_availability_map(disk);
-        bam.count_unused_sectors(1, self.num_tracks()) - bam.count_unused_track_sectors(TRACK_HEADER) as usize
+        bam.count_unused_sectors(1, self.num_tracks())
+            - bam.count_unused_track_sectors(TRACK_HEADER) as usize
     }
 }
 
@@ -196,14 +221,18 @@ impl Commodore1541 {
         sector.set_byte(1, sector_ref.1);
     }
 
-    fn get_next_sector<'a>(&self, disk: &'a Disk<Self>, sector: &Sector) -> Option<&'a Sector> {
+    fn get_next_sector<'a>(
+        &self,
+        disk: &'a Disk<Self>,
+        sector: &Sector,
+    ) -> Option<(&'a Sector, SectorRef)> {
         let track_no = *sector.get_byte(0);
         if track_no == SECTOR_END_OF_CHAIN.0 {
             None
         } else {
             let sector_no = *sector.get_byte(1);
             let sector_ref = (track_no, sector_no);
-            Some(disk.get_sector(sector_ref))
+            Some((disk.get_sector(sector_ref), sector_ref))
         }
     }
 
@@ -229,9 +258,76 @@ impl Commodore1541 {
         file_content.extend_from_slice(&bytes);
 
         while let Some(s) = self.get_next_sector(disk, sector) {
-            sector = s;
+            sector = s.0;
             sector.get_bytes(2, &mut bytes);
             file_content.extend_from_slice(&bytes);
         }
+    }
+
+    fn chain_sectors(&self, disk: &mut Disk<Self>, sectors: &[SectorRef]) {
+        if sectors.is_empty() {
+            return;
+        }
+
+        for i in 0..sectors.len() - 1 {
+            let sector_ref = sectors[i];
+            let next_sector_ref = sectors[i + 1];
+            let sector = disk.get_sector_mut(sector_ref);
+            self.set_next_sector(sector, next_sector_ref);
+        }
+        let sector = disk.get_sector_mut(*sectors.last().unwrap());
+        self.end_sector_chain(sector);
+    }
+
+    fn allocate_sectors(
+        &self,
+        disk: &mut Disk<Self>,
+        num_sectors: usize,
+    ) -> Option<Vec<SectorRef>> {
+        if num_sectors > self.num_unused_sectors(disk) {
+            None
+        } else {
+            let mut bam = self.get_block_availability_map(disk);
+            let sectors = bam.allocate_sectors(num_sectors);
+            if let Some(sectors) = &sectors {
+                self.chain_sectors(disk, &sectors);
+            }
+            sectors
+        }
+    }
+
+    fn create_file_list_entry(&self, disk: &mut Disk<Self>, file_entry: &FileEntry) {
+        if let Some(entry_ref) = self.find_scratched_file_list_entry(disk) {
+            self.update_file_list_entry(disk, entry_ref, file_entry);
+        }
+    }
+
+    fn find_scratched_file_list_entry(&self, disk: &mut Disk<Self>) -> Option<FileListEntryRef> {
+        let mut sector = disk.get_sector(SECTOR_DISK_HEADER);
+        while let Some(s) = self.get_next_sector(disk, sector) {
+            sector = s.0;
+            let sector_ref = s.1;
+
+            let mut entry_bytes = [0_u8; FILE_LIST_ENTRY_SIZE];
+            for sector_entry in 0..8 {
+                sector.get_bytes(sector_entry * FILE_LIST_ENTRY_SIZE, &mut entry_bytes);
+                let entry = FileEntry::from_bytes(&entry_bytes);
+                if entry.file_type == FileType::Scratched {
+                    return Some((sector_ref, sector_entry));
+                }
+            }
+        }
+        None
+    }
+
+    fn update_file_list_entry(
+        &self,
+        disk: &mut Disk<Self>,
+        entry_ref: FileListEntryRef,
+        file_entry: &FileEntry,
+    ) {
+        let sector = disk.get_sector_mut(entry_ref.0);
+        let offset = entry_ref.1 * FILE_LIST_ENTRY_SIZE;
+        file_entry.store(sector, offset);
     }
 }

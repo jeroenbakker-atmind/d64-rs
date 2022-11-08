@@ -42,6 +42,11 @@ pub trait Layout {
     where
         Self: Sized;
 
+    /// Create a new file and store it to disk.
+    fn create_file(&self, disk: &mut Disk<Self>, file_entry: &Self::FileEntryType, content: &[u8])
+    where
+        Self: Sized;
+
     fn num_unused_sectors(&self, disk: &mut Disk<Self>) -> usize
     where
         Self: Sized;

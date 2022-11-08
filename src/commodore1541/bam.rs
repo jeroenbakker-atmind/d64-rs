@@ -36,11 +36,21 @@ impl<'a> BlockAvailabilityMap<'a> {
         }
     }
 
+    pub fn is_unused(&mut self, sector: SectorRef) -> bool {
+        let sector_offset = get_sector_offset(sector);
+        let bit_mask = get_sector_mask(sector);
+
+        let availability = *self.sector.get_byte(sector_offset);
+        (availability & bit_mask) != 0
+    }
+    pub fn is_used(&mut self, sector: SectorRef) -> bool {
+        !self.is_unused(sector)
+    }
+
     pub fn mark_unused(&mut self, sector: SectorRef) {
         let track_offset = get_track_offset(sector);
         let sector_offset = get_sector_offset(sector);
         let bit_mask = get_sector_mask(sector);
-
         let availability = *self.sector.get_byte(sector_offset);
         let new_availability = availability | bit_mask;
         self.sector.set_byte(sector_offset, new_availability);
@@ -62,5 +72,42 @@ impl<'a> BlockAvailabilityMap<'a> {
             result += self.count_unused_track_sectors(track_no) as usize;
         }
         result
+    }
+
+    pub fn allocate_sectors(&mut self, num_sectors: usize) -> Option<Vec<SectorRef>> {
+        let mut allocated_sectors = Vec::new();
+        for track_no in 1..=35 {
+            /* Don't allocate sectors on system. We should add this to an AllocationStrategy */
+            if track_no == 18 {
+                continue;
+            }
+
+            for sector_no in 0..24 {
+                let sector = (track_no, sector_no);
+                if self.is_unused(sector) {
+                    allocated_sectors.push(sector);
+
+                    if allocated_sectors.len() == num_sectors {
+                        break;
+                    }
+                }
+            }
+            if allocated_sectors.len() == num_sectors {
+                break;
+            }
+        }
+
+        fn mark_sectors(bam: &mut BlockAvailabilityMap, sectors: &[SectorRef]) {
+            for sector in sectors {
+                bam.mark_used(*sector);
+            }
+        }
+
+        if allocated_sectors.len() == num_sectors {
+            mark_sectors(self, &allocated_sectors);
+            Some(allocated_sectors)
+        } else {
+            None
+        }
     }
 }
