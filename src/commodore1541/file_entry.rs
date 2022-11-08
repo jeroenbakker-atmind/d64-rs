@@ -42,10 +42,11 @@ pub struct FileEntry {
     pub file_type: FileType,
     pub num_blocks: usize,
     pub start_sector: SectorRef,
+    pub file_entry_ref: FileListEntryRef,
 }
 
 impl FileEntry {
-    pub fn from_bytes(bytes: &[u8; 32]) -> FileEntry {
+    pub fn from_bytes(bytes: &[u8; 32], file_entry_ref: FileListEntryRef) -> FileEntry {
         let file_type = FileType::from(bytes[2]);
         let start_sector = (bytes[3], bytes[4]);
         let name = PetsciiString::fixed_size(&bytes[5..21]);
@@ -55,6 +56,7 @@ impl FileEntry {
             file_type,
             num_blocks,
             start_sector,
+            file_entry_ref,
         }
     }
 
@@ -66,6 +68,9 @@ impl FileEntry {
         sector.set_bytes(offset + 5, self.name.bytes.as_slice());
         sector.set_byte(offset + 31, (self.num_blocks / 256) as u8);
         sector.set_byte(offset + 30, (self.num_blocks % 256) as u8)
+    }
+    pub fn scratch(&self, sector: &mut Sector, offset: usize) {
+        sector.fill(offset + 2, offset + 32, 0);
     }
 }
 

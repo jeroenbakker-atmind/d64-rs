@@ -116,8 +116,9 @@ impl Layout for Commodore1541 {
 
             let mut entry_bytes = [0_u8; FILE_LIST_ENTRY_SIZE];
             for sector_entry in 0..8 {
+                let file_entry_ref = (s.1, sector_entry);
                 sector.get_bytes(sector_entry * FILE_LIST_ENTRY_SIZE, &mut entry_bytes);
-                let entry = FileEntry::from_bytes(&entry_bytes);
+                let entry = FileEntry::from_bytes(&entry_bytes, file_entry_ref);
                 if entry.file_type != FileType::Scratched {
                     result.push(entry);
                 }
@@ -147,6 +148,7 @@ impl Layout for Commodore1541 {
         if let Some(sectors) = self.allocate_sectors(disk, num_sectors) {
             for (sector_ref, chunk) in sectors.iter().zip(chunks) {
                 let sector = disk.get_sector_mut(*sector_ref);
+                sector.fill(SECTOR_HEADER_SIZE, self.bytes_per_sector() as usize, 0);
                 sector.set_bytes(SECTOR_HEADER_SIZE, chunk);
             }
 
@@ -155,6 +157,34 @@ impl Layout for Commodore1541 {
             file_entry.num_blocks = num_sectors;
             self.create_file_list_entry(disk, &file_entry);
         }
+    }
+
+    fn delete_file(&self, disk: &mut Disk<Self>, file_entry: &Self::FileEntryType)
+    where
+        Self: Sized,
+    {
+        /* Remove file */
+        let mut sectors_to_clear = Vec::new();
+        {
+            let mut sector = disk.get_sector(file_entry.start_sector);
+            let mut next_sector_ref = (*sector.get_byte(0), *sector.get_byte(1));
+            sectors_to_clear.push(next_sector_ref);
+            while next_sector_ref.0 != 0 {
+                sector = disk.get_sector(next_sector_ref);
+                next_sector_ref = (*sector.get_byte(0), *sector.get_byte(1));
+                sectors_to_clear.push(next_sector_ref);
+            }
+        }
+
+        /* Mark sectors unused. */
+        let mut bam = self.get_block_availability_map(disk);
+        for sector_to_clear in sectors_to_clear {
+            bam.mark_unused(sector_to_clear);
+        }
+
+        let sector = disk.get_sector_mut(file_entry.file_entry_ref.0);
+        let offset = file_entry.file_entry_ref.1 as usize * FILE_LIST_ENTRY_SIZE;
+        file_entry.scratch(sector, offset);
     }
 
     fn num_unused_sectors(&self, disk: &mut Disk<Self>) -> usize
@@ -299,6 +329,10 @@ impl Commodore1541 {
     fn create_file_list_entry(&self, disk: &mut Disk<Self>, file_entry: &FileEntry) {
         if let Some(entry_ref) = self.find_scratched_file_list_entry(disk) {
             self.update_file_list_entry(disk, entry_ref, file_entry);
+        } else {
+            if let Some(sector_ref) = self.create_file_list_sector(disk) {
+                self.update_file_list_entry(disk, (sector_ref, 0), file_entry);
+            }
         }
     }
 
@@ -310,14 +344,38 @@ impl Commodore1541 {
 
             let mut entry_bytes = [0_u8; FILE_LIST_ENTRY_SIZE];
             for sector_entry in 0..8 {
+                let file_entry_ref = (sector_ref, sector_entry);
                 sector.get_bytes(sector_entry * FILE_LIST_ENTRY_SIZE, &mut entry_bytes);
-                let entry = FileEntry::from_bytes(&entry_bytes);
+                let entry = FileEntry::from_bytes(&entry_bytes, file_entry_ref);
                 if entry.file_type == FileType::Scratched {
                     return Some((sector_ref, sector_entry));
                 }
             }
         }
         None
+    }
+
+    fn create_file_list_sector(&self, disk: &mut Disk<Self>) -> Option<SectorRef> {
+        let mut bam = self.get_block_availability_map(disk);
+        if let Some(sector_refs) = bam.allocate_sectors(1) {
+            let mut sector = disk.get_sector(SECTOR_DISK_HEADER);
+            let mut sector_ref = SECTOR_DISK_HEADER;
+            while let Some(s) = self.get_next_sector(disk, sector) {
+                sector = s.0;
+                sector_ref = s.1;
+            }
+
+            let new_sector_ref = sector_refs[0];
+            let sector = disk.get_sector_mut(sector_ref);
+            self.set_next_sector(sector, new_sector_ref);
+
+            let new_sector = disk.get_sector_mut(new_sector_ref);
+            new_sector.fill(SECTOR_HEADER_SIZE, self.bytes_per_sector() as usize, 0);
+            self.end_sector_chain(new_sector);
+            Some(new_sector_ref)
+        } else {
+            None
+        }
     }
 
     fn update_file_list_entry(

@@ -218,6 +218,22 @@ where
         L::default().read_file(self, file_entry)
     }
 
+    /// Count number of unused sectors
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use d64::*;
+    /// let mut disk = Disk::<Commodore1541>::new();
+    /// disk.format();
+    /// let entry = FileEntry {
+    ///     name: PetsciiString::from(&String::from("HELLO WORLD")),
+    ///     file_type: d64::FileType::User,
+    ///     ..FileEntry::default()
+    /// };
+    /// disk.create_file(&entry, b"TEST");
+    /// assert_eq!(disk.num_unused_sectors(), 663);
+    /// ```
     pub fn create_file(&mut self, file_entry: &L::FileEntryType, content: &[u8]) {
         L::default().create_file(self, file_entry, content);
     }

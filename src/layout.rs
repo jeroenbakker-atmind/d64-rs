@@ -47,6 +47,10 @@ pub trait Layout {
     where
         Self: Sized;
 
+    fn delete_file(&self, disk: &mut Disk<Self>, file_entry: &Self::FileEntryType)
+    where
+        Self: Sized;
+
     fn num_unused_sectors(&self, disk: &mut Disk<Self>) -> usize
     where
         Self: Sized;
