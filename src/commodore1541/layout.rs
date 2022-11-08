@@ -3,10 +3,12 @@ use crate::{
     TrackNo, PETSCII_A, PETSCII_NBSP, PETSCII_ONE, PETSCII_TWO, PETSCII_ZERO,
 };
 
+/// Track number containing info about the disk, and files on the disk. 
+const TRACK_HEADER: TrackNo = 18;
 /// Reference to the sector containing the BAM, disk name and disk id.
-const SECTOR_DISK_HEADER: SectorRef = (18, 0);
+const SECTOR_DISK_HEADER: SectorRef = (TRACK_HEADER, 0);
 /// Default sector where to start the file list stored on the disk.
-const SECTOR_DISK_LISTING: SectorRef = (18, 1);
+const SECTOR_DISK_LISTING: SectorRef = (TRACK_HEADER, 1);
 /// Indicates that marks the end of a chain of sectors.
 const SECTOR_END_OF_CHAIN: SectorRef = (0, 255);
 
@@ -136,7 +138,7 @@ impl Layout for Commodore1541 {
         Self: Sized,
     {
         let bam = self.get_block_availability_map(disk);
-        bam.count_unused_sectors(1, self.num_tracks())
+        bam.count_unused_sectors(1, self.num_tracks()) - bam.count_unused_track_sectors(TRACK_HEADER) as usize
     }
 }
 

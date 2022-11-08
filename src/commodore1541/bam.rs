@@ -13,7 +13,7 @@ fn get_sector_offset(sector: SectorRef) -> usize {
 }
 
 fn get_sector_mask(sector: SectorRef) -> u8 {
-    sector.1 % 8
+    1 << (sector.1 % 8)
 }
 
 impl<'a> BlockAvailabilityMap<'a> {

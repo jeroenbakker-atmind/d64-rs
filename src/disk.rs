@@ -207,7 +207,7 @@ where
     /// use d64::*;
     /// let mut disk = Disk::<Commodore1541>::new();
     /// disk.format();
-    /// assert_eq!(disk.num_unused_sectors(), 280);
+    /// assert_eq!(disk.num_unused_sectors(), 664);
     /// ```
     pub fn num_unused_sectors(&mut self) -> usize {
         L::default().num_unused_sectors(self)
