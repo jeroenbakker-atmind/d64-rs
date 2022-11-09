@@ -11,6 +11,3 @@ repository = "https://github.com/jeroenbakker-atmind/d64-rs"
 [dev-dependencies]
 commodore1541 = { path="../commodore1541" }
 petscii = { path="../petscii" }
-
-[badges]
-maintenance = { status = "actively-developed" }
