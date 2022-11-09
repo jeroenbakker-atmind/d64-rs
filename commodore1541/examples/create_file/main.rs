@@ -1,5 +1,6 @@
-use d64::commodore1541::{Commodore1541, FileEntry, FileType};
-use d64::{Disk, PetsciiString};
+use commodore1541::{Commodore1541, FileEntry, FileType};
+use d64::Disk;
+use petscii::PetsciiString;
 
 fn main() -> std::io::Result<()> {
     let mut disk = Disk::<Commodore1541>::new();

@@ -1,4 +1,4 @@
-use crate::{Disk, PetsciiString, TrackNo};
+use crate::{Disk, TrackNo};
 
 /// Layout trait to map how a specific device uses its physical media (Disk).
 ///
@@ -7,6 +7,7 @@ use crate::{Disk, PetsciiString, TrackNo};
 /// API.
 pub trait Layout {
     type FileEntryType;
+    type StringType;
 
     /// Number of tracks that are created on the physical media.
     fn num_tracks(&self) -> u8;
@@ -15,11 +16,11 @@ pub trait Layout {
     /// Bytes that are stored in a single sector.
     fn bytes_per_sector(&self) -> u16;
     /// Extract the human readable name of the given disk.
-    fn get_disk_name(&self, disk: &Disk<Self>) -> PetsciiString
+    fn get_disk_name(&self, disk: &Disk<Self>) -> Self::StringType
     where
         Self: Sized;
     /// Change the human readable name of the given disk.
-    fn set_disk_name(&self, disk: &mut Disk<Self>, new_name: &String)
+    fn set_disk_name(&self, disk: &mut Disk<Self>, new_name: &Self::StringType)
     where
         Self: Sized;
     /// Format the disk.

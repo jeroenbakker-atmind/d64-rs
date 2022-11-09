@@ -8,7 +8,7 @@ use std::{
     path::Path,
 };
 
-use crate::{layout::Layout, PetsciiString, Sector, SectorRef, Track, TrackNo};
+use crate::{layout::Layout, Sector, SectorRef, Track, TrackNo};
 
 /// Disk provides a API way how tracks and sectors are logically layed out.
 #[derive(Default)]
@@ -34,7 +34,7 @@ where
     ///
     /// ```
     /// use d64::*;
-    /// use d64::commodore1541::*;
+    /// use commodore1541::*;
     ///
     /// let _disk = Disk::<Commodore1541>::new();
     /// ```
@@ -63,11 +63,11 @@ where
     ///
     /// ```
     /// use d64::*;
-    /// use d64::commodore1541::*;
+    /// use commodore1541::*;
     /// use std::path::*;
     ///
     /// let mut disk = Disk::<Commodore1541>::new();
-    /// let path = Path::new("./disks/1541-empty.d64");
+    /// let path = Path::new("../disks/1541-empty.d64");
     /// disk.read_from_path(&path).unwrap();
     /// ```
     pub fn read_from_path(&mut self, filename: &Path) -> std::io::Result<()> {
@@ -82,12 +82,12 @@ where
     ///
     /// ```
     /// use d64::*;
-    /// use d64::commodore1541::*;
+    /// use commodore1541::*;
     /// use std::path::*;
     /// use std::fs::*;
     ///
     /// let mut disk = Disk::<Commodore1541>::new();
-    /// let path = Path::new("./disks/1541-empty.d64");
+    /// let path = Path::new("../disks/1541-empty.d64");
     /// let mut file = File::open(&path).unwrap();
     /// disk.read_from_reader(&mut file).unwrap();
     /// ```
@@ -116,7 +116,7 @@ where
     ///
     /// ```
     /// use d64::*;
-    /// use d64::commodore1541::*;
+    /// use commodore1541::*;
     ///
     /// let disk = Disk::<Commodore1541>::new();
     /// let sector = disk.get_sector((18, 0));
@@ -135,7 +135,7 @@ where
     ///
     /// ```
     /// use d64::*;
-    /// use d64::commodore1541::*;
+    /// use commodore1541::*;
     ///
     /// let mut disk = Disk::<Commodore1541>::new();
     /// let sector = disk.get_sector_mut((18, 0));
@@ -156,16 +156,16 @@ where
     ///
     /// ```
     /// use d64::*;
-    /// use d64::commodore1541::*;
+    /// use commodore1541::*;
     /// use std::path::*;
     ///
     /// let mut disk = Disk::<Commodore1541>::new();
-    /// let path = Path::new("./disks/1541-empty.d64");
+    /// let path = Path::new("../disks/1541-empty.d64");
     /// disk.read_from_path(&path).unwrap();
     ///
     /// assert_eq!(String::from(&disk.get_name()), "EMPTY");
     /// ```
-    pub fn get_name(&self) -> PetsciiString {
+    pub fn get_name(&self) -> L::StringType {
         L::default().get_disk_name(self)
     }
     /// Set the name of the disk
@@ -174,13 +174,14 @@ where
     ///
     /// ```
     /// use d64::*;
-    /// use d64::commodore1541::*;
+    /// use commodore1541::*;
+    /// use petscii::*;
     ///
     /// let mut disk = Disk::<Commodore1541>::new();
-    /// disk.set_name(&String::from("Hello"));
+    /// disk.set_name(&PetsciiString::from(&String::from("Hello")));
     /// assert_eq!(String::from(&disk.get_name()), "HELLO");
     /// ```
-    pub fn set_name(&mut self, new_name: &String) {
+    pub fn set_name(&mut self, new_name: &L::StringType) {
         L::default().set_disk_name(self, new_name)
     }
 
@@ -190,7 +191,7 @@ where
     ///
     /// ```
     /// use d64::*;
-    /// use d64::commodore1541::*;
+    /// use commodore1541::*;
     ///
     /// let mut disk = Disk::<Commodore1541>::new();
     /// disk.format();
@@ -205,11 +206,11 @@ where
     ///
     /// ```
     /// use d64::*;
-    /// use d64::commodore1541::*;
+    /// use commodore1541::*;
     /// use std::path::*;
     ///
     /// let mut disk = Disk::<Commodore1541>::new();
-    /// let path = Path::new("./disks/1541-empty.d64");
+    /// let path = Path::new("../disks/1541-empty.d64");
     /// disk.read_from_path(&path).unwrap();
     /// let entries = disk.list_entries();
     /// ```
@@ -223,7 +224,7 @@ where
     ///
     /// ```
     /// use d64::*;
-    /// use d64::commodore1541::*;
+    /// use commodore1541::*;
     ///
     /// let mut disk = Disk::<Commodore1541>::new();
     /// disk.format();
@@ -245,7 +246,8 @@ where
     ///
     /// ```
     /// use d64::*;
-    /// use d64::commodore1541::*;
+    /// use commodore1541::*;
+    /// use petscii::*;
     ///
     /// let mut disk = Disk::<Commodore1541>::new();
     /// disk.format();

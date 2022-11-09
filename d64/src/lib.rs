@@ -27,26 +27,24 @@
 //!
 //! ```
 //! use d64::*;
-//! use d64::commodore1541::*;
+//! use commodore1541::*;
+//! use petscii::*;
 //! use std::path::Path;
 //!
 //! let mut disk = Disk::<Commodore1541>::new();
 //! disk.format();
-//! disk.set_name(&String::from("VOLUME 1"));
+//! disk.set_name(&PetsciiString::from(&String::from("VOLUME 1")));
 //!
-//! disk.write_to_path(&Path::new("volume1.d64")).unwrap();
+//! disk.write_to_path(&Path::new("../volume1.d64")).unwrap();
 //! ```
-pub mod commodore1541;
 mod disk;
 mod layout;
-mod petscii;
 mod sector;
 mod sector_ref;
 mod track;
 
 pub use disk::*;
 pub use layout::*;
-pub use petscii::*;
 pub use sector::*;
 pub use sector_ref::*;
 pub use track::*;

@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use d64::commodore1541::{Commodore1541, FileType};
+use commodore1541::{Commodore1541, FileType};
 use d64::Disk;
 
 fn main() -> std::io::Result<()> {

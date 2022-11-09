@@ -1,7 +1,5 @@
 use std::io::{Read, Write};
 
-use crate::decode_petscii;
-
 #[derive(Default)]
 pub struct Sector {
     data: Vec<u8>,
@@ -44,18 +42,7 @@ impl Sector {
         }
     }
 
-    pub fn print(&self) {
-        let mut x = 0;
-        let mut decoded = String::new();
-        for a in &self.data {
-            print!("{:02x} ", a);
-            decoded.push(decode_petscii(*a) as char);
-            x += 1;
-            if x == 16 {
-                x = 0;
-                println!("  {}", decoded);
-                decoded.clear();
-            }
-        }
+    pub fn as_slice(&self) -> &[u8] {
+        &self.data.as_slice()
     }
 }

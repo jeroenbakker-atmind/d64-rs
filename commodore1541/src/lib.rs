@@ -1,4 +1,5 @@
 mod bam;
+pub mod debug;
 mod file_entry;
 mod layout;
 

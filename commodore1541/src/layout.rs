@@ -1,8 +1,6 @@
-use crate::commodore1541::{BlockAvailabilityMap, FileEntry, FileListEntryRef, FileType};
-use crate::{
-    Disk, Layout, PetsciiString, Sector, SectorRef, TrackNo, PETSCII_A, PETSCII_NBSP, PETSCII_ONE,
-    PETSCII_TWO, PETSCII_ZERO,
-};
+use crate::{BlockAvailabilityMap, FileEntry, FileListEntryRef, FileType};
+use d64::{Disk, Layout, Sector, SectorRef, TrackNo};
+use petscii::{PetsciiString, PETSCII_A, PETSCII_NBSP, PETSCII_ONE, PETSCII_TWO, PETSCII_ZERO};
 
 /// Track number containing info about the disk, and files on the disk.
 const TRACK_HEADER: TrackNo = 18;
@@ -37,6 +35,7 @@ pub struct Commodore1541 {}
 impl Layout for Commodore1541 {
     /// Type to contain a single entry for [Layout::list_entries].
     type FileEntryType = FileEntry;
+    type StringType = PetsciiString;
 
     fn num_tracks(&self) -> u8 {
         35
@@ -72,15 +71,14 @@ impl Layout for Commodore1541 {
         PetsciiString::fixed_size(&bytes)
     }
 
-    fn set_disk_name(&self, disk: &mut Disk<Self>, new_name: &String)
+    fn set_disk_name(&self, disk: &mut Disk<Self>, new_name: &Self::StringType)
     where
         Self: Sized,
     {
         let sector = disk.get_sector_mut(SECTOR_DISK_HEADER);
         // TODO: max 16 chars.
-        let petscii_string = PetsciiString::from(new_name);
         sector.fill(DISK_NAME_OFFSET_START, DISK_NAME_OFFSET_END, PETSCII_NBSP);
-        sector.set_bytes(DISK_NAME_OFFSET_START, petscii_string.as_slice());
+        sector.set_bytes(DISK_NAME_OFFSET_START, new_name.as_slice());
     }
 
     fn format_disk(&self, disk: &mut Disk<Self>)
@@ -90,7 +88,7 @@ impl Layout for Commodore1541 {
         self.clear_disk(disk);
         self.initialize_dos_version(disk);
         self.initialize_bam(disk);
-        self.set_disk_name(disk, &String::from("NONAME"));
+        self.set_disk_name(disk, &PetsciiString::from(&String::from("NONAME")));
         self.initialize_disk_id(disk);
         self.initialize_directory_listing(disk);
     }

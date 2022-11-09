@@ -42,7 +42,7 @@ pub const PETSCII_NBSP: u8 = 160;
 ///
 /// # Example
 /// ```
-/// use d64::*;
+/// use petscii::*;
 /// assert_eq!(decode_petscii(PETSCII_A), 'A');
 /// assert_eq!(decode_petscii(PETSCII_J), 'J');
 /// assert_eq!(decode_petscii(PETSCII_Z), 'Z');
@@ -67,7 +67,7 @@ pub fn decode_petscii(petscii: u8) -> char {
 ///
 /// # Example
 /// ```
-/// use d64::*;
+/// use petscii::*;
 /// assert_eq!(encode_petscii('A', PETSCII_NBSP), PETSCII_A);
 /// assert_eq!(encode_petscii('a', PETSCII_NBSP), PETSCII_A);
 /// assert_eq!(encode_petscii('I', PETSCII_NBSP), PETSCII_I);

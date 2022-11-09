@@ -15,6 +15,6 @@ Still in early development.
 * [x] List entries.
 * [x] Read file.
 * [x] Create file.
-* [ ] Delete file.
+* [x] Delete file.
 * [ ] Write file.
 * [x] Disk IDs. (01-2A signature)

@@ -1,4 +1,4 @@
-use crate::{Sector, SectorRef, TrackNo};
+use d64::{Sector, SectorRef, TrackNo};
 
 pub struct BlockAvailabilityMap<'a> {
     sector: &'a mut Sector,

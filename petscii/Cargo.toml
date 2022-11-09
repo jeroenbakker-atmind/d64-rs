@@ -1,0 +1,13 @@
+[package]
+name = "petscii"
+version = "0.1.0"
+authors = ["Jeroen Bakker<j.bakker@atmind.nl>"]
+edition = "2021"
+
+description = "Crate to create and modify and inspect D64 and related files."
+readme = "README.md"
+repository = "https://github.com/jeroenbakker-atmind/d64-rs"
+
+[badges]
+maintenance = { status = "actively-developed" }
+

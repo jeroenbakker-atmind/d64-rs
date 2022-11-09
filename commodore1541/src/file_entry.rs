@@ -1,4 +1,5 @@
-use crate::{PetsciiString, Sector, SectorRef, PETSCII_NBSP};
+use d64::{Sector, SectorRef};
+use petscii::{PetsciiString, PETSCII_NBSP};
 
 const OFFSET_FILE_TYPE: usize = 2;
 const OFFSET_START_SECTOR: usize = 3;

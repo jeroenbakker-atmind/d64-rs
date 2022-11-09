@@ -1,6 +1,7 @@
 use std::path::Path;
 
-use d64::{commodore1541::Commodore1541, Disk};
+use commodore1541::{debug::print_sector, Commodore1541};
+use d64::Disk;
 
 fn main() -> std::io::Result<()> {
     let mut disk = Disk::<Commodore1541>::new();
@@ -9,7 +10,7 @@ fn main() -> std::io::Result<()> {
     for sector_no in 0..2 {
         println!(" -- 18-{:02} --", sector_no);
         let sector = disk.get_sector((18, sector_no));
-        sector.print();
+        print_sector(sector);
     }
     Ok(())
 }
