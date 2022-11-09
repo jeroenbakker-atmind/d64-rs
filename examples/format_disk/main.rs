@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use d64::{Commodore1541, Disk};
+use d64::{commodore1541::Commodore1541, Disk};
 
 fn main() -> std::io::Result<()> {
     let mut disk = Disk::<Commodore1541>::new();

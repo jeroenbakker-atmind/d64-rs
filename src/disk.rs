@@ -34,6 +34,8 @@ where
     ///
     /// ```
     /// use d64::*;
+    /// use d64::commodore1541::*;
+    ///
     /// let _disk = Disk::<Commodore1541>::new();
     /// ```
     pub fn new() -> Self {
@@ -61,7 +63,9 @@ where
     ///
     /// ```
     /// use d64::*;
+    /// use d64::commodore1541::*;
     /// use std::path::*;
+    ///
     /// let mut disk = Disk::<Commodore1541>::new();
     /// let path = Path::new("./disks/1541-empty.d64");
     /// disk.read_from_path(&path).unwrap();
@@ -78,8 +82,10 @@ where
     ///
     /// ```
     /// use d64::*;
+    /// use d64::commodore1541::*;
     /// use std::path::*;
     /// use std::fs::*;
+    ///
     /// let mut disk = Disk::<Commodore1541>::new();
     /// let path = Path::new("./disks/1541-empty.d64");
     /// let mut file = File::open(&path).unwrap();
@@ -110,8 +116,10 @@ where
     ///
     /// ```
     /// use d64::*;
+    /// use d64::commodore1541::*;
+    ///
     /// let disk = Disk::<Commodore1541>::new();
-    /// let _sector = disk.get_sector((18, 0));
+    /// let sector = disk.get_sector((18, 0));
     /// ```
     pub fn get_sector(&self, sector_ref: SectorRef) -> &Sector {
         self.get_track(sector_ref.0).get_sector(sector_ref.1)
@@ -127,8 +135,10 @@ where
     ///
     /// ```
     /// use d64::*;
+    /// use d64::commodore1541::*;
+    ///
     /// let mut disk = Disk::<Commodore1541>::new();
-    /// let mut _sector = disk.get_sector_mut((18, 0));
+    /// let sector = disk.get_sector_mut((18, 0));
     /// ```
     pub fn get_sector_mut(&mut self, sector_ref: SectorRef) -> &mut Sector {
         self.get_track_mut(sector_ref.0)
@@ -146,10 +156,13 @@ where
     ///
     /// ```
     /// use d64::*;
+    /// use d64::commodore1541::*;
     /// use std::path::*;
+    ///
     /// let mut disk = Disk::<Commodore1541>::new();
     /// let path = Path::new("./disks/1541-empty.d64");
     /// disk.read_from_path(&path).unwrap();
+    ///
     /// assert_eq!(String::from(&disk.get_name()), "EMPTY");
     /// ```
     pub fn get_name(&self) -> PetsciiString {
@@ -161,7 +174,8 @@ where
     ///
     /// ```
     /// use d64::*;
-    /// use std::path::*;
+    /// use d64::commodore1541::*;
+    ///
     /// let mut disk = Disk::<Commodore1541>::new();
     /// disk.set_name(&String::from("Hello"));
     /// assert_eq!(String::from(&disk.get_name()), "HELLO");
@@ -176,6 +190,8 @@ where
     ///
     /// ```
     /// use d64::*;
+    /// use d64::commodore1541::*;
+    ///
     /// let mut disk = Disk::<Commodore1541>::new();
     /// disk.format();
     /// ```
@@ -189,7 +205,9 @@ where
     ///
     /// ```
     /// use d64::*;
+    /// use d64::commodore1541::*;
     /// use std::path::*;
+    ///
     /// let mut disk = Disk::<Commodore1541>::new();
     /// let path = Path::new("./disks/1541-empty.d64");
     /// disk.read_from_path(&path).unwrap();
@@ -205,8 +223,11 @@ where
     ///
     /// ```
     /// use d64::*;
+    /// use d64::commodore1541::*;
+    ///
     /// let mut disk = Disk::<Commodore1541>::new();
     /// disk.format();
+    ///
     /// assert_eq!(disk.num_unused_sectors(), 664);
     /// ```
     pub fn num_unused_sectors(&mut self) -> usize {
@@ -224,14 +245,18 @@ where
     ///
     /// ```
     /// use d64::*;
+    /// use d64::commodore1541::*;
+    ///
     /// let mut disk = Disk::<Commodore1541>::new();
     /// disk.format();
+    ///
     /// let entry = FileEntry {
     ///     name: PetsciiString::from(&String::from("HELLO WORLD")),
-    ///     file_type: d64::FileType::User,
+    ///     file_type: FileType::User,
     ///     ..FileEntry::default()
     /// };
     /// disk.create_file(&entry, b"TEST");
+    ///
     /// assert_eq!(disk.num_unused_sectors(), 663);
     /// ```
     pub fn create_file(&mut self, file_entry: &L::FileEntryType, content: &[u8]) {

@@ -1,6 +1,7 @@
 use std::path::Path;
 
-use d64::{Commodore1541, Disk};
+use d64::commodore1541::{Commodore1541};
+use d64::{Disk};
 
 fn main() -> std::io::Result<()> {
     let mut disk = Disk::<Commodore1541>::new();
@@ -10,7 +11,7 @@ fn main() -> std::io::Result<()> {
     for entry in entries {
         println!(
             "{:<3} \"{:<16}\" {:?}",
-            entry.num_blocks,
+            entry.num_sectors,
             String::from(&entry.name),
             entry.file_type
         );

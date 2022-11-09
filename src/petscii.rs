@@ -98,13 +98,17 @@ pub fn encode_petscii(ascii: char, default: u8) -> u8 {
 
 #[derive(Debug, Clone, Default)]
 pub struct PetsciiString {
-    pub bytes: Vec<u8>,
+    bytes: Vec<u8>,
 }
 
 impl PetsciiString {
     pub fn fixed_size(bytes: &[u8]) -> PetsciiString {
         let b = Vec::from(bytes);
         PetsciiString { bytes: b }
+    }
+
+    pub fn as_slice(&self) -> &[u8] {
+        self.bytes.as_slice()
     }
 }
 

@@ -1,7 +1,12 @@
 [package]
 name = "d64"
 version = "0.1.0"
+authors = ["Jeroen Bakker<j.bakker@atmind.nl>"]
 edition = "2021"
+
+description = "Crate to create and modify and inspect D64 and related files."
+readme = "README.md"
+repository = "https://github.com/jeroenbakker-atmind/d64-rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -23,4 +28,5 @@ name="read_file"
 [[example]]
 name="create_file"
 
-[dependencies]
+[badges]
+maintenance = { status = "actively-developed" }

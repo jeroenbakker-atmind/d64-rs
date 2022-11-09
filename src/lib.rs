@@ -27,6 +27,7 @@
 //!
 //! ```
 //! use d64::*;
+//! use d64::commodore1541::*;
 //! use std::path::Path;
 //!
 //! let mut disk = Disk::<Commodore1541>::new();
@@ -35,7 +36,7 @@
 //!
 //! disk.write_to_path(&Path::new("volume1.d64")).unwrap();
 //! ```
-mod commodore1541;
+pub mod commodore1541;
 mod disk;
 mod layout;
 mod petscii;
@@ -43,7 +44,6 @@ mod sector;
 mod sector_ref;
 mod track;
 
-pub use commodore1541::*;
 pub use disk::*;
 pub use layout::*;
 pub use petscii::*;
